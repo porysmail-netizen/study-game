@@ -1455,17 +1455,19 @@ function processCatchUpBattles(){
     const battleDateStr=G.nextMonsterDate;
     const battleDate=new Date(battleDateStr);
 
-    // 시즌 경계 체크: 배틀 날짜가 다음달 1일 이후면 시즌 리셋 먼저
-    const today=G.currentDate;
-    if(battleDate.getMonth()!==today.getMonth()||battleDate.getFullYear()!==today.getFullYear()){
+    // 시즌 경계 체크: 배틀 날짜의 월이 시즌 시작월을 넘으면 리셋
+    const battleYM=battleDateStr.slice(0,7); // "2026-03"
+    const seasonYM=(G.seasonStartDate||dk(G.currentDate)).slice(0,7);
+    const todayYM=dk(G.currentDate).slice(0,7);
+    if(battleYM!==seasonYM&&battleYM!==todayYM){
       // 시즌 경계 넘음 → 조용히 시즌 리셋
       const prevSeason=G.season||1;
       G.stats={atk:10,def:10,hp:10,mag:10};
-      G.bones=G.bones; // 뼈는 유지 (이미 소급 보상 받는 중)
       G.dayCount=1;
       G.battles=G.battles||[];
       G.syncMode=false;G.defeatCount=0;G.monsterNerfed=false;
       G.season=prevSeason+1;
+      G.seasonStartDate=battleDateStr.slice(0,8)+'01'; // 해당 월 1일
       G.nextMonsterDate=newMonsterDate(battleDate);
       results.push({date:battleDateStr, type:'season_reset', season:G.season});
       continue;
