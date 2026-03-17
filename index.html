@@ -2710,7 +2710,7 @@ async function fbConnect(){
     const snap=await window._fbGet('families/'+code+'/gameData');
     if(snap.exists()){
       const d=snap.val();
-      if((d.dayCount||0)>(G.dayCount||0)){
+      if((d.dayCount||0)>(_savedDayCount||0)){
         const useCloud=confirm('"'+code+'" 코드에 저장된 데이터가 있어요! (Day '+d.dayCount+')\n클라우드 데이터를 불러올까요?\n취소하면 현재 데이터를 올려요.');
         if(useCloud)applyCloudData(d);else await fbPushNow(code);
       }else{await fbPushNow(code);}
@@ -2807,7 +2807,7 @@ async function fbLoadOnStart(){
     const snap=await window._fbGet('families/'+fbFamilyCode+'/gameData');
     if(snap.exists()){
       const d=snap.val();
-      if((d.dayCount||0)>=(G.dayCount||0)) applyCloudData(d); // applyCloudData 내부에서 checkMonsterSpawn 호출
+      if((d.dayCount||0)>=(_savedDayCount||0)) applyCloudData(d); // renderAll 재계산 전 원래 dayCount와 비교
       else if(!G.battlePending) setTimeout(()=>{checkMonsterSpawn();renderAll();},100); // 로컬이 더 최신
     } else {
       if(!G.battlePending) setTimeout(()=>{checkMonsterSpawn();renderAll();},100); // 클라우드 데이터 없음
@@ -2846,6 +2846,7 @@ document.addEventListener('keydown',e=>{
 
 // ─── INIT ─────────────────────────────────────────
 load();
+const _savedDayCount=G.dayCount; // renderAll()이 재계산하기 전의 원래 dayCount 보존
 G.currentDate=nowKST();
 calY=G.currentDate.getFullYear();calM=G.currentDate.getMonth();
 // seasonStartDate 없으면 오늘로 초기화
