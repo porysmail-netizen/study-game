@@ -2817,7 +2817,7 @@ document.addEventListener('keydown',e=>{
 
 // ─── INIT ─────────────────────────────────────────
 load();
-G.currentDate=nowKST(); // 항상 한국 시간 기준
+G.currentDate=nowKST();
 calY=G.currentDate.getFullYear();calM=G.currentDate.getMonth();
 // seasonStartDate 없으면 오늘로 초기화
 if(!G.seasonStartDate){const _d=new Date();G.seasonStartDate=`${_d.getFullYear()}-${String(_d.getMonth()+1).padStart(2,'0')}-01`;}
@@ -2829,6 +2829,20 @@ if(G.battlePending&&G.pendingMonster)setTimeout(startBattle,900);
 else setTimeout(()=>{checkMonsterSpawn();renderAll();},500);
 setTimeout(generateAppIcon,1200);
 setTimeout(fbLoadOnStart,800);
+
+// 콘솔 디버그용 전역 노출
+window.G=G;
+window._dk=(d)=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+window._debug=()=>{
+  console.log('=== DEBUG ===');
+  console.log('currentDate:', window._dk(G.currentDate));
+  console.log('nextMonsterDate:', G.nextMonsterDate);
+  console.log('seasonStartDate:', G.seasonStartDate);
+  console.log('dayCount:', G.dayCount);
+  console.log('battlePending:', G.battlePending);
+  console.log('catchUp조건:', G.nextMonsterDate, '<=', window._dk(G.currentDate), '→', G.nextMonsterDate <= window._dk(G.currentDate));
+};
+window._spawn=()=>checkMonsterSpawn();
 </script>
 </body>
 </html>
