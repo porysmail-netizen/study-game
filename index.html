@@ -2760,8 +2760,17 @@ function fbAttachListener(code){
   let first=true;
   fbListener=window._fbOnValue('families/'+code+'/gameData',snap=>{
     if(first){first=false;return;}
-    if(fbSyncing)return;
-    if(snap.exists()){const d=snap.val();if((d.dayCount||0)>=(G.dayCount||0)){applyCloudData(d);showNotif('☁️ 클라우드에서 받았어요!');cloudSetDot('synced');}}
+    if(fbSyncing)return; // 내가 저장 중일 때 무시
+    // 저장 후 3초 이내엔 리스너 무시 (내 저장 데이터 재수신 방지)
+    if(fbSaveTimer)return;
+    if(snap.exists()){
+      const d=snap.val();
+      if((d.dayCount||0)>=(G.dayCount||0)){
+        applyCloudData(d);
+        showNotif('☁️ 클라우드에서 받았어요!');
+        cloudSetDot('synced');
+      }
+    }
   });
 }
 async function fbLoadOnStart(){
