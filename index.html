@@ -1,0 +1,2806 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>여름이 키우기</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="여름이키우기">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#FF9ED8">
+<link rel="apple-touch-icon" href="img/app-icon.png">
+<link id="appleTouchIcon" rel="apple-touch-icon" href="img/app-icon.png">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FFF5FB;
+  --panel:#FFFFFF;
+  --panel2:#FFF0F8;
+  --border:#FFB3D9;
+  --border2:#C8E6FF;
+  --gold:#FF8C00;
+  --gold2:#FFA530;
+  --text:#3D2060;
+  --text2:#8B6AAA;
+  --atk:#FF4466;
+  --def:#3399FF;
+  --hp:#22CC66;
+  --mag:#CC44FF;
+  --bone:#A0522D;
+  --pink:#FF85C2;
+  --mint:#7EEACC;
+  --yellow:#FFD740;
+  --lavender:#C8AAFF;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  background:var(--bg);color:var(--text);
+  font-family:'Press Start 2P',monospace;font-size:14px;
+  height:100dvh;overflow:hidden;display:flex;flex-direction:column;
+}
+/* Cheerful pastel background pattern */
+body::before{
+  content:'';position:fixed;inset:0;
+  background:
+    radial-gradient(circle at 20% 20%,#FFE0F044 0%,transparent 35%),
+    radial-gradient(circle at 80% 10%,#E0F0FF44 0%,transparent 30%),
+    radial-gradient(circle at 60% 80%,#E8FFE044 0%,transparent 35%),
+    radial-gradient(circle at 10% 70%,#FFF0CC44 0%,transparent 30%);
+  pointer-events:none;z-index:0;
+}
+#gw{
+  position:relative;width:100%;max-width:460px;
+  height:100dvh;margin:0 auto;
+  display:flex;flex-direction:column;z-index:1;
+  padding-bottom:calc(80px + env(safe-area-inset-bottom,0px));
+}
+.nav-bar{
+  position:fixed;bottom:0;left:50%;transform:translateX(-50%);
+  width:100%;max-width:460px;
+  background:#FFF;
+  border-top:3px solid var(--border);
+  display:flex;z-index:50;
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+
+/* TOP BAR */
+.top-bar{
+  background:linear-gradient(135deg,#FF9ED8,#FFB86C);
+  border-bottom:3px solid #FF79B0;
+  padding:8px 14px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:space-between;
+  box-shadow:0 2px 8px #FF9ED844;
+  gap:8px;
+}
+.top-date{color:#FFF;font-size:13px;text-shadow:1px 1px 0 #FF79B0;white-space:nowrap;flex-shrink:0;}
+.top-day{font-size:12px;color:#FFE0F0;white-space:nowrap;flex-shrink:0;}
+.top-bones{color:#FFF;font-size:13px;white-space:nowrap;flex-shrink:0;}
+.top-cloud{color:#FFF;font-size:14px;cursor:pointer;opacity:.85;flex-shrink:0;}
+
+/* SCREENS */
+.screen{display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0;}
+.screen.active{display:flex;}
+
+/* CHARACTER ZONE — 화면의 약 40% */
+.char-zone{
+  flex:0 0 40dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:4px 14px 4px;
+  background:linear-gradient(160deg,#FFF0FB 0%,#F0E8FF 50%,#E8F4FF 100%);
+  border-bottom:3px solid var(--border);position:relative;
+  overflow:hidden;
+}
+#charCanvas{
+  display:block;image-rendering:pixelated;image-rendering:crisp-edges;
+  filter:drop-shadow(0 4px 16px #FF85C288);position:relative;z-index:1;
+  max-height:100%;width:auto;
+}
+.char-info{display:flex;align-items:center;gap:10px;margin-top:4px;z-index:1;position:relative;flex-shrink:0;}
+.char-class{font-size:15px;color:var(--gold);text-shadow:1px 1px 0 #FFAA5544;}
+.char-lv{
+  background:linear-gradient(135deg,var(--yellow),#FFA530);
+  border:2px solid #FFD740;border-radius:20px;
+  padding:3px 12px;font-size:13px;color:#3D2060;
+  box-shadow:0 2px 6px #FFD74066;
+}
+
+/* Stats 2x2 — 원래 사이즈 */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:8px 12px;flex-shrink:0;}
+.sc{
+  background:#FFF;border:2px solid;
+  border-radius:12px;padding:8px 10px;
+  box-shadow:0 3px 8px #00000010;
+}
+.sc.atk{border-color:#FFB3C0;background:linear-gradient(135deg,#FFF5F7,#FFF);}
+.sc.def{border-color:#B3D4FF;background:linear-gradient(135deg,#F5F8FF,#FFF);}
+.sc.hp {border-color:#B3F0C8;background:linear-gradient(135deg,#F5FFF8,#FFF);}
+.sc.mag{border-color:#E0B3FF;background:linear-gradient(135deg,#FAF5FF,#FFF);}
+.sc-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.sc-n{font-size:15px;}
+.sc-v{font-size:17px;font-weight:bold;}
+.bar-bg{background:#F0E8F8;border:1px solid #E0CCF0;height:9px;border-radius:5px;overflow:hidden;}
+.bar-fill{height:100%;transition:width .5s ease;border-radius:5px;}
+.sc.atk .sc-n,.sc.atk .sc-v{color:#FF4466;}
+.sc.def .sc-n,.sc.def .sc-v{color:#2288FF;}
+.sc.hp  .sc-n,.sc.hp  .sc-v{color:#11AA55;}
+.sc.mag .sc-n,.sc.mag .sc-v{color:#AA33EE;}
+.sc.atk .bar-fill{background:linear-gradient(90deg,#FFB3C0,#FF4466);}
+.sc.def .bar-fill{background:linear-gradient(90deg,#B3D4FF,#2288FF);}
+.sc.hp  .bar-fill{background:linear-gradient(90deg,#B3F0C8,#11AA55);}
+.sc.mag .bar-fill{background:linear-gradient(90deg,#E0B3FF,#AA33EE);}
+
+/* Info row */
+.info-row{display:flex;gap:6px;padding:0 12px 6px;flex-shrink:0;}
+.ic{
+  flex:1;background:#FFF;border:2px solid var(--border);
+  border-radius:12px;padding:5px 8px;text-align:center;
+  box-shadow:0 3px 8px #FF85C222;
+}
+.ic-l{font-size:11px;color:var(--text2);margin-bottom:2px;}
+.ic-v{font-size:14px;color:var(--gold);}
+
+/* STAMP AREA — flex-shrink:0으로 절대 밀리지 않음 */
+.stamp-area{
+  background:linear-gradient(180deg,#FFF8FF,#FFF0F8);
+  border-top:3px solid var(--border);
+  padding:8px 8px 10px;flex-shrink:0;
+}
+.stamp-lbl{
+  font-size:13px;color:var(--text2);
+  margin-bottom:6px;text-align:center;
+}
+.stamp-btns{display:flex;gap:5px;}
+.sbtn{
+  background:#FFF;border:3px solid;
+  color:var(--text);font-family:'Press Start 2P',monospace;
+  font-size:12px;padding:8px 4px;border-radius:12px;
+  cursor:pointer;text-align:center;flex:1;
+  transition:all .12s;display:flex;flex-direction:column;
+  align-items:center;gap:4px;min-height:68px;justify-content:center;
+  box-shadow:0 4px 0 #00000015;
+}
+.sbtn:hover{transform:translateY(-3px);box-shadow:0 7px 0 #00000015;}
+.sbtn:active{transform:translateY(2px);box-shadow:0 2px 0 #00000015;}
+.sbtn .si{font-size:22px;line-height:1;}
+.sbtn .sn{font-size:13px;}
+.sbtn .sb{font-size:11px;}
+.sbtn[data-t="eng"] {border-color:#FF8FAB;background:linear-gradient(180deg,#FFF5F7,#FFE8EF);}
+.sbtn[data-t="math"]{border-color:#7BB8FF;background:linear-gradient(180deg,#F5F8FF,#E8F0FF);}
+.sbtn[data-t="kor"] {border-color:#7DDBA8;background:linear-gradient(180deg,#F5FFF8,#E8FFF0);}
+.sbtn[data-t="music"]{border-color:#CC88FF;background:linear-gradient(180deg,#FAF5FF,#F0E8FF);}
+.sbtn[data-t="help"]{border-color:#FFD040;background:linear-gradient(180deg,#FFFDF0,#FFF5CC);}
+.sbtn[data-t="eng"]:hover {border-color:#FF4488;background:linear-gradient(180deg,#FFDDE6,#FFC8D8);}
+.sbtn[data-t="math"]:hover{border-color:#2277EE;background:linear-gradient(180deg,#DCE8FF,#C8D8FF);}
+.sbtn[data-t="kor"]:hover {border-color:#11AA55;background:linear-gradient(180deg,#D0FFEA,#B8F5D8);}
+.sbtn[data-t="music"]:hover{border-color:#9922DD;background:linear-gradient(180deg,#EEE0FF,#DDC8FF);}
+.sbtn[data-t="help"]:hover{border-color:#FF9900;background:linear-gradient(180deg,#FFEEBB,#FFE099);}
+
+/* NAV */
+.nav-btn{
+  flex:1;background:none;border:none;color:var(--text2);
+  font-family:'Press Start 2P',monospace;font-size:14px;
+  padding:14px 4px;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;gap:5px;transition:all .15s;
+}
+.nav-btn:hover,.nav-btn.active{color:var(--gold);}
+.nav-btn.active{background:linear-gradient(180deg,#FFF5E8,#FFF);}
+.nav-btn span:first-child{font-size:26px;}
+
+/* DEV */
+.dev-panel{
+  background:#FFF8E8;border-top:2px solid #FFE0A0;
+  padding:7px 12px;flex-shrink:0;
+  display:flex;align-items:center;gap:6px;flex-wrap:wrap;
+}
+.dev-lbl{color:#AA8833;font-size:13px;}
+.dev-btn{
+  background:#FFF3C8;border:2px solid #FFD040;color:#AA6600;
+  font-family:'Press Start 2P',monospace;font-size:13px;
+  padding:5px 9px;border-radius:6px;cursor:pointer;
+}
+.dev-btn:hover{background:#FFE070;border-color:#FF9900;color:#663300;}
+
+/* ===== SCHEDULE SCREEN ===== */
+#s-schedule{overflow:hidden;}
+.sch-hdr{
+  padding:12px 16px;
+  background:linear-gradient(135deg,#FFD6A5,#FFAA5A);
+  border-bottom:3px solid #FFAA5A;flex-shrink:0;
+}
+.sch-ttl{font-size:15px;color:#7A3800;text-shadow:1px 1px 0 #FFE0AA;}
+.sch-body{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:10px;background:#FFFAF0;}
+.sch-section{background:#FFF;border:2px solid #FFD6A5;border-radius:12px;padding:10px;}
+.sch-sec-ttl{font-size:12px;color:#AA6600;margin-bottom:8px;}
+/* Stamp library chips */
+.stamp-library{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;}
+.slib-chip{
+  display:flex;align-items:center;gap:5px;
+  padding:6px 10px;border-radius:20px;border:2px solid;
+  cursor:grab;transition:all .12s;font-family:'Press Start 2P',monospace;
+  font-size:10px;background:#FFF;user-select:none;
+}
+.slib-chip:hover{transform:translateY(-2px);box-shadow:0 4px 8px #00000015;}
+.slib-chip.dragging{opacity:.4;cursor:grabbing;transform:scale(.95);}
+.slib-chip.drag-over{box-shadow:0 0 0 3px #CC44FF88;transform:scale(1.05);}
+.slib-chip .sc-drag{font-size:11px;color:#CCC;margin-right:1px;cursor:grab;}
+.slib-chip .sc-ico{font-size:16px;}
+.slib-chip .sc-nm{color:#333;}
+.sch-add-btn{
+  background:linear-gradient(135deg,#FFE8A5,#FFD040);
+  border:2px solid #FFAA00;color:#664400;
+  font-family:'Press Start 2P',monospace;font-size:10px;
+  padding:7px 14px;border-radius:20px;cursor:pointer;
+  box-shadow:0 3px 0 #FFAA0066;transition:all .1s;
+}
+.sch-add-btn:hover{transform:translateY(-2px);box-shadow:0 5px 0 #FFAA0066;}
+/* Stamp editor */
+.stamp-editor{
+  background:linear-gradient(180deg,#FFF8FF,#FFF0FF);
+  border:2px solid #E8AAFF;border-radius:12px;
+  padding:12px;margin-top:8px;
+}
+.se-ttl{font-size:12px;color:#660099;margin-bottom:10px;}
+.se-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;}
+.se-lbl{font-size:9px;color:#AA55CC;min-width:28px;flex-shrink:0;}
+.se-input{
+  flex:1;border:2px solid #E8AAFF;border-radius:8px;
+  font-family:'Press Start 2P',monospace;font-size:11px;
+  padding:6px 10px;color:#3D2060;background:#FFF;outline:none;min-width:0;
+}
+.se-input:focus{border-color:#CC44FF;}
+.se-colors{display:flex;gap:6px;flex-wrap:wrap;}
+.se-color-swatch{
+  width:26px;height:26px;border-radius:50%;cursor:pointer;
+  border:3px solid transparent;transition:all .12s;
+}
+.se-color-swatch.selected{border-color:#333;transform:scale(1.2);}
+.se-icons{display:flex;gap:4px;flex-wrap:wrap;}
+.se-icon-opt{
+  font-size:20px;cursor:pointer;padding:4px;border-radius:6px;
+  border:2px solid transparent;transition:all .12s;
+}
+.se-icon-opt.selected{border-color:#CC44FF;background:#FFF0FF;}
+.se-stats{display:flex;gap:5px;flex-wrap:wrap;}
+.se-stat-btn{
+  background:#F5F0FF;border:2px solid #D0AAFF;
+  font-family:'Press Start 2P',monospace;font-size:9px;
+  color:#553388;padding:5px 8px;border-radius:8px;cursor:pointer;
+}
+.se-stat-btn.selected{background:#CC44FF;border-color:#9911CC;color:#FFF;}
+.se-btns{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
+.se-save{
+  background:linear-gradient(135deg,#AAFFAA,#55EE77);
+  border:2px solid #33CC55;color:#114422;
+  font-family:'Press Start 2P',monospace;font-size:10px;
+  padding:8px 14px;border-radius:8px;cursor:pointer;
+  box-shadow:0 3px 0 #33CC5566;
+}
+.se-cancel{
+  background:#F0F0F0;border:2px solid #CCC;color:#666;
+  font-family:'Press Start 2P',monospace;font-size:10px;
+  padding:8px 14px;border-radius:8px;cursor:pointer;
+}
+.se-del{
+  background:linear-gradient(135deg,#FFAAAA,#FF5555);
+  border:2px solid #CC2222;color:#FFF;
+  font-family:'Press Start 2P',monospace;font-size:10px;
+  padding:8px 14px;border-radius:8px;cursor:pointer;
+  margin-left:auto;
+}
+/* Day-of-week tabs */
+.dow-tabs{display:flex;gap:4px;margin-bottom:8px;}
+.dow-tab{
+  flex:1;background:#FFF0E8;border:2px solid #FFD6A5;
+  font-family:'Press Start 2P',monospace;font-size:11px;
+  color:#AA6600;padding:7px 2px;border-radius:8px;cursor:pointer;transition:all .12s;
+}
+.dow-tab.active{background:linear-gradient(135deg,#FFD040,#FFA530);border-color:#FF8C00;color:#3D2060;}
+.dow-schedule{min-height:60px;}
+.dow-slot{
+  display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;
+  padding:8px;background:#FFF8F0;border:1px solid #FFD6A5;border-radius:8px;
+}
+.dow-chip{
+  display:flex;align-items:center;gap:4px;padding:5px 8px;
+  border-radius:16px;border:2px solid;font-family:'Press Start 2P',monospace;
+  font-size:9px;background:#FFF;
+}
+.dow-chip-del{
+  background:none;border:none;color:#CC2222;font-size:14px;
+  cursor:pointer;padding:0 0 0 2px;line-height:1;
+}
+.dow-add-row{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px;}
+.dow-add-chip{
+  display:flex;align-items:center;gap:3px;padding:4px 8px;
+  border-radius:14px;border:2px dashed;font-family:'Press Start 2P',monospace;
+  font-size:9px;cursor:pointer;background:#FFF;opacity:.7;transition:all .12s;
+}
+.dow-add-chip:hover{opacity:1;transform:translateY(-1px);}
+
+/* ===== STAMP SCREEN ===== */
+#s-stamps{overflow:hidden;}
+.cal-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 16px;
+  background:linear-gradient(135deg,#AADDFF,#C8AAFF);
+  border-bottom:3px solid #AABBFF;flex-shrink:0;
+}
+.cal-nav{
+  background:#FFF;border:2px solid #AABBFF;
+  color:#4455CC;font-family:'Press Start 2P',monospace;
+  font-size:16px;padding:6px 12px;cursor:pointer;border-radius:8px;
+  box-shadow:0 3px 0 #8899EE44;
+}
+.cal-nav:hover{background:#EEF0FF;transform:translateY(-1px);}
+.cal-ttl{font-size:17px;color:#FFF;text-shadow:1px 1px 0 #8899EE;}
+.cal-wrap{padding:10px;flex:1;overflow-y:auto;background:#F8F0FF;}
+.cal-wdays{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:5px;}
+.cal-wd{text-align:center;font-size:14px;color:#9977BB;padding:4px 0;}
+.cal-wd:first-child{color:#FF5577;}.cal-wd:last-child{color:#4477EE;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+.cal-day{
+  background:#FFF;border:2px solid #E8D8F8;
+  border-radius:6px;padding:5px 4px;min-height:58px;
+  font-size:14px;color:#9977BB;
+  box-shadow:0 2px 4px #00000008;
+}
+.cal-day.today{border-color:#FFB830;background:linear-gradient(180deg,#FFFDF0,#FFF8E0);}
+.cal-day.selected{border-color:#FF85C2;background:linear-gradient(180deg,#FFF0F8,#FFE0F0);box-shadow:0 0 0 2px #FF85C244;}
+.cal-day.today.selected{border-color:#FF85C2;background:linear-gradient(180deg,#FFF0F8,#FFE0F0);}
+.cal-day.has-stamps{cursor:pointer;}
+.cal-day.has-stamps:hover{transform:scale(1.04);z-index:2;position:relative;}
+.cal-day.empty{background:transparent;border-color:transparent;box-shadow:none;}
+.cal-day .dn{font-size:14px;margin-bottom:3px;font-weight:bold;}
+.cal-day.today .dn{color:#FF8C00;}
+.cal-day.selected .dn{color:#FF3388;}
+.sdots{display:flex;flex-wrap:wrap;gap:2px;margin-top:2px;}
+.sdot{width:11px;height:11px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:5px;color:#fff;}
+.sdot.eng{background:#FF4466;}.sdot.math{background:#2277EE;}
+.sdot.kor{background:#11AA55;}.sdot.music{background:#9922DD;}.sdot.help{background:#FF9900;}
+.today-panel{
+  padding:12px 14px;
+  background:linear-gradient(180deg,#FFFBF0,#FFF8E8);
+  border-top:3px solid #FFD870;flex-shrink:0;
+}
+.today-panel h3{font-size:15px;color:var(--gold);margin-bottom:8px;}
+.today-list{display:flex;gap:7px;flex-wrap:wrap;}
+.today-item{
+  display:flex;align-items:center;gap:5px;
+  background:#FFF;border:2px solid #FFD870;
+  padding:6px 10px;border-radius:8px;
+  box-shadow:0 2px 0 #FFD87044;
+}
+.today-cnt{font-size:16px;color:var(--gold);}
+
+/* ===== SHOP SCREEN ===== */
+#s-shop{overflow:hidden;}
+.shop-hdr{
+  padding:12px 16px;
+  background:linear-gradient(135deg,#AAFFCC,#CCFFAA);
+  border-bottom:3px solid #88DDAA;
+  display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
+}
+.shop-ttl{font-size:16px;color:#226644;text-shadow:1px 1px 0 #AAFFCC;}
+.shop-b{font-size:16px;color:#664400;}
+.shop-list{padding:10px;display:flex;flex-direction:column;gap:8px;flex:1;overflow-y:auto;background:#F5FFF8;}
+.shop-item{
+  background:#FFF;border:2px solid #AADDCC;
+  border-radius:12px;padding:12px;
+  display:flex;align-items:center;gap:12px;
+  box-shadow:0 3px 0 #AADDCC55;
+}
+.shop-ico{font-size:28px;flex-shrink:0;}
+.shop-info{flex:1;}
+.shop-nm{font-size:16px;color:var(--text);margin-bottom:5px;}
+.shop-cost{font-size:14px;color:#664400;}
+.buy-btn{
+  background:linear-gradient(135deg,#AAFFAA,#66EE88);
+  border:2px solid #44CC66;color:#115522;
+  font-family:'Press Start 2P',monospace;font-size:14px;
+  padding:8px 12px;border-radius:8px;cursor:pointer;
+  flex-shrink:0;transition:all .1s;
+  box-shadow:0 3px 0 #44CC6688;
+}
+.buy-btn:hover{transform:translateY(-2px);box-shadow:0 5px 0 #44CC6688;}
+.buy-btn:active{transform:translateY(1px);box-shadow:0 2px 0 #44CC6688;}
+.buy-btn:disabled{background:#EEE;border-color:#CCC;color:#AAA;cursor:not-allowed;transform:none;box-shadow:none;}
+.shop-hist{
+  padding:10px 14px;
+  background:linear-gradient(180deg,#FFFBF0,#FAFFF5);
+  border-top:3px solid #88DDAA;flex-shrink:0;max-height:90px;overflow-y:auto;
+}
+.shop-hist h3{font-size:14px;color:#226644;margin-bottom:6px;}
+.hist-item{font-size:12px;color:#559966;padding:4px 0;border-bottom:1px solid #CCEECC;}
+
+/* BATTLE */
+#battle-ov{position:fixed;inset:0;background:#3D206099;display:none;align-items:center;justify-content:center;z-index:100;flex-direction:column;backdrop-filter:blur(3px);}
+#battle-ov.show{display:flex;}
+.bx{
+  background:#FFF;
+  border:4px solid var(--yellow);border-radius:16px;padding:12px;
+  width:96%;max-width:460px;text-align:center;
+  box-shadow:0 8px 32px #FF85C244,0 0 0 2px #FFD74044;
+  max-height:96dvh;overflow:hidden;
+  display:flex;flex-direction:column;gap:8px;
+}
+.bx-ttl{font-size:15px;color:#FF6600;text-shadow:1px 1px 0 #FFD740;flex-shrink:0;}
+/* 전투 캔버스 — 가로 꽉 채움 */
+#bCanvas{display:block;image-rendering:pixelated;border-radius:8px;width:100%;height:auto;flex-shrink:0;}
+/* 몬스터 정보 — 가로 한 줄 */
+.mon-profile{
+  display:flex;align-items:center;gap:8px;
+  background:linear-gradient(135deg,#FFF8FF,#FFF0FF);
+  border:2px solid #E8AAFF;border-radius:10px;
+  padding:7px 10px;flex-shrink:0;text-align:left;
+}
+.mon-emoji{font-size:28px;flex-shrink:0;animation:bounce 0.8s ease-in-out infinite alternate;}
+@keyframes bounce{0%{transform:translateY(0);}100%{transform:translateY(-4px);}}
+.mon-name{font-size:13px;color:#660099;font-weight:bold;flex-shrink:0;white-space:nowrap;}
+.mon-sep{color:#E8AAFF;flex-shrink:0;font-size:11px;}
+.mon-desc{
+  font-size:10px;color:#884499;line-height:1.5;
+  overflow:hidden;text-overflow:ellipsis;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+}
+/* 전투 로그 — 높이 줄이고 스크롤 */
+.blog{
+  background:#FFF8F0;border:2px solid #FFD870;
+  border-radius:8px;padding:8px;
+  height:118px;overflow-y:auto;flex-shrink:0;
+  text-align:left;font-size:13px;line-height:1.9;
+}
+.bl{display:block;}
+.bl.win{color:#FF8C00;}
+.bl.lose{color:#DD2244;}
+.bl.info{color:#7755AA;}
+.bconf{
+  background:linear-gradient(135deg,#FFDD66,#FFA530);
+  border:2px solid #FF8C00;color:#3D2060;
+  font-family:'Press Start 2P',monospace;font-size:13px;
+  padding:11px 24px;border-radius:8px;cursor:pointer;
+  box-shadow:0 4px 0 #FF8C0066;flex-shrink:0;
+}
+.bconf:hover{transform:translateY(-2px);box-shadow:0 6px 0 #FF8C0066;}
+
+/* NOTIF */
+.notif{
+  position:fixed;top:58px;left:50%;transform:translateX(-50%);
+  background:#FFF;border:3px solid var(--pink);
+  border-radius:12px;padding:12px 18px;font-size:13px;
+  color:#CC3377;z-index:200;opacity:0;transition:opacity .3s;
+  text-align:center;max-width:300px;pointer-events:none;
+  box-shadow:0 4px 20px #FF85C244;
+}
+.notif.show{opacity:1;}
+.sgain{position:fixed;pointer-events:none;z-index:150;font-size:14px;font-weight:bold;animation:fup 1.5s ease forwards;}
+@keyframes fup{0%{opacity:1;transform:translateY(0) scale(1);}100%{opacity:0;transform:translateY(-80px) scale(1.6);}}
+
+/* 캐릭터 말풍선 */
+.char-bubble{
+  position:absolute;
+  background:#FFF;border:3px solid;border-radius:16px;
+  padding:10px 13px;font-size:13px;line-height:1.5;
+  pointer-events:none;z-index:10;
+  max-width:100px;word-break:keep-all;word-wrap:break-word;
+  box-shadow:0 4px 14px #00000018;
+  animation:bubblePop .25s cubic-bezier(.34,1.56,.64,1) forwards;
+  top:50%;left:calc(100% - 10px);transform:translateY(-50%);
+  text-align:center;
+}
+@keyframes bubblePop{
+  0%{opacity:0;transform:translateY(-50%) scale(.6);}
+  100%{opacity:1;transform:translateY(-50%) scale(1);}
+}
+@keyframes charShake{
+  0%,100%{transform:rotate(0deg);}
+  20%{transform:rotate(-8deg) scale(1.1);}
+  40%{transform:rotate(8deg) scale(1.1);}
+  60%{transform:rotate(-5deg);}
+  80%{transform:rotate(5deg);}
+}
+#charCanvas.shaking{animation:charShake .4s ease;}
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:#F8F0FF;}
+::-webkit-scrollbar-thumb{background:#FFB3D9;border-radius:2px;}
+</style>
+</head>
+<body>
+<div id="gw">
+  <div class="top-bar">
+    <div class="top-date">📅 <span id="tDate">2026.03.14</span></div>
+    <div class="top-day">Day <span id="tDay">1</span> <span id="tSeason" style="font-size:10px;opacity:.8;"></span></div>
+    <div style="display:flex;align-items:center;gap:6px;">
+      <div class="top-bones">🦴 <span id="tBones">0</span>개</div>
+      <div class="top-cloud" onclick="openCloudModal()">
+        <span id="cloudDot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#AAA;margin-right:2px;vertical-align:middle;"></span>☁️
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div id="s-main" class="screen active">
+    <div class="char-zone">
+      <canvas id="bgCanvas" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;"></canvas>
+      <div style="position:relative;display:inline-block;z-index:1;" id="charWrap">
+        <canvas id="charCanvas" width="220" height="260" onclick="onCharTouch()" style="cursor:pointer;"></canvas>
+      </div>
+      <div class="char-info">
+        <div class="char-class" id="cClass">✨ 초보 모험가 ✨</div>
+        <div class="char-lv" id="cLv">Lv.1</div>
+      </div>
+    </div>
+    <div class="stats-grid">
+      <div class="sc atk"><div class="sc-h"><span class="sc-n">⚔️ 공격력</span><span class="sc-v" id="v-atk">10</span></div><div class="bar-bg"><div class="bar-fill" id="b-atk"></div></div></div>
+      <div class="sc def"><div class="sc-h"><span class="sc-n">🛡️ 방어력</span><span class="sc-v" id="v-def">10</span></div><div class="bar-bg"><div class="bar-fill" id="b-def"></div></div></div>
+      <div class="sc hp"><div class="sc-h"><span class="sc-n">❤️ 체력</span><span class="sc-v" id="v-hp">10</span></div><div class="bar-bg"><div class="bar-fill" id="b-hp"></div></div></div>
+      <div class="sc mag"><div class="sc-h"><span class="sc-n">✨ 마법</span><span class="sc-v" id="v-mag">10</span></div><div class="bar-bg"><div class="bar-fill" id="b-mag"></div></div></div>
+    </div>
+    <div class="info-row">
+      <div class="ic" id="monsterCard" style="display:flex;align-items:center;justify-content:center;gap:6px;">
+        <div id="monsterCardText" style="text-align:center;">
+          <div class="ic-l">👾 다음 몬스터</div>
+          <div class="ic-v" id="iMonster">??일</div>
+        </div>
+        <div id="replayBtn" style="display:none;flex-shrink:0;">
+          <button onclick="replayLastBattle()" style="
+            font-family:'Press Start 2P',monospace;font-size:7px;line-height:1.5;
+            background:#F0E8FF;border:2px solid #BB77FF;color:#7722CC;
+            width:32px;height:32px;border-radius:8px;cursor:pointer;
+            display:flex;align-items:center;justify-content:center;text-align:center;
+            box-shadow:0 2px 0 #BB77FF55;padding:0;">다시<br>보기</button>
+        </div>
+      </div>
+      <div class="ic"><div class="ic-l">💪 총 전투력</div><div class="ic-v" id="iPower">40</div></div>
+    </div>
+    <div class="stamp-area">
+      <div class="stamp-lbl" id="stampDayLbl">✦ 오늘의 공부 도장 ✦</div>
+      <div class="stamp-btns" id="stampBtns"></div>
+    </div>
+    <div class="dev-panel" style="display:none">
+      <span class="dev-lbl">🛠️ 개발모드</span>
+      <button class="dev-btn" onclick="advDay()">다음날 →</button>
+      <button class="dev-btn" onclick="backDay()">← 이전날</button>
+      <button class="dev-btn" onclick="addBones(10)">🦴+10</button>
+      <button class="dev-btn" onclick="resetGame()">초기화</button>
+    </div>
+  </div>
+
+  <!-- STAMPS -->
+  <div id="s-stamps" class="screen">
+    <div class="cal-hdr">
+      <button class="cal-nav" onclick="calPrev()">◀</button>
+      <span class="cal-ttl" id="calTitle">2024년 1월</span>
+      <button class="cal-nav" onclick="calNext()">▶</button>
+    </div>
+    <div style="text-align:right;padding:4px 10px 0;flex-shrink:0;">
+      <button onclick="goToToday()" style="
+        background:linear-gradient(135deg,#FFD040,#FFA530);
+        border:2px solid #FF8C00;color:#3D2060;
+        font-family:'Press Start 2P',monospace;font-size:9px;
+        padding:5px 12px;border-radius:14px;cursor:pointer;
+        box-shadow:0 2px 0 #FF8C0055;">📅 오늘로</button>
+    </div>
+    <div class="cal-wrap">
+      <div class="cal-wdays"><div class="cal-wd">일</div><div class="cal-wd">월</div><div class="cal-wd">화</div><div class="cal-wd">수</div><div class="cal-wd">목</div><div class="cal-wd">금</div><div class="cal-wd">토</div></div>
+      <div class="cal-grid" id="calGrid"></div>
+    </div>
+    <div class="today-panel">
+      <h3 id="dayPanelTitle">📌 오늘의 스탬프</h3>
+      <div class="today-list" id="todayList"></div>
+    </div>
+  </div>
+
+  <!-- SHOP -->
+  <div id="s-shop" class="screen">
+    <div class="shop-hdr">
+      <div class="shop-ttl">🏪 보상 상점</div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div class="shop-b">🦴 <span id="shopB">0</span>개</div>
+        <button onclick="openShopEdit()" style="
+          background:#F5F0FF;border:2px solid #C8AAFF;color:#7733CC;
+          font-family:'Press Start 2P',monospace;font-size:9px;
+          padding:6px 10px;border-radius:12px;cursor:pointer;">✏️ 편집</button>
+      </div>
+    </div>
+    <div class="shop-list" id="shopList"></div>
+    <div class="shop-hist"><h3>🧾 구매 내역</h3><div id="purchHist"></div></div>
+  </div>
+
+  <!-- SCHEDULE -->
+  <div id="s-schedule" class="screen">
+    <div class="sch-hdr"><div class="sch-ttl">⚙️ 스케쥴 변경</div></div>
+    <div class="sch-body">
+      <div class="sch-section">
+        <div class="sch-sec-ttl">🎨 공부 도장 목록</div>
+        <div id="stampLibrary" class="stamp-library"></div>
+        <button class="sch-add-btn" onclick="startAddStamp()">+ 도장 추가</button>
+        <div id="stampEditor" class="stamp-editor" style="display:none">
+          <div class="se-ttl" id="seTtl">도장 편집</div>
+          <div class="se-row"><span class="se-lbl">이름</span><input id="seNameInput" class="se-input" type="text" maxlength="8" placeholder="과목명 (최대8자)"></div>
+          <div class="se-row"><span class="se-lbl">색상</span><div class="se-colors" id="seColors"></div></div>
+          <div class="se-row"><span class="se-lbl">아이콘</span><div class="se-icons" id="seIcons"></div></div>
+          <div class="se-row"><span class="se-lbl">속성</span><div class="se-stats" id="seStats"></div></div>
+          <div class="se-btns">
+            <button class="se-save" onclick="saveStampEdit()">✓ 저장</button>
+            <button class="se-cancel" onclick="cancelStampEdit()">취소</button>
+            <button class="se-del" id="seDelBtn" onclick="deleteEditingStamp()">🗑 삭제</button>
+          </div>
+        </div>
+      </div>
+      <div class="sch-section">
+        <div class="sch-sec-ttl">📅 요일별 스케쥴 (월~금)</div>
+        <div class="dow-tabs">
+          <button class="dow-tab active" onclick="selectDow(1,this)">월</button>
+          <button class="dow-tab" onclick="selectDow(2,this)">화</button>
+          <button class="dow-tab" onclick="selectDow(3,this)">수</button>
+          <button class="dow-tab" onclick="selectDow(4,this)">목</button>
+          <button class="dow-tab" onclick="selectDow(5,this)">금</button>
+        </div>
+        <div id="dowSchedule" class="dow-schedule"></div>
+      </div>
+
+      <!-- 개발자 모드 버튼 -->
+      <div style="text-align:center;padding:4px 0 2px;">
+        <button onclick="openDevAuth()" style="
+          background:#F5F0FF;border:2px solid #D0B0FF;color:#9966CC;
+          font-family:'Press Start 2P',monospace;font-size:9px;
+          padding:7px 16px;border-radius:20px;cursor:pointer;opacity:.6;
+        ">🛠️ 개발자 모드</button>
+      </div>
+
+      <!-- 개발자 메뉴 (비번 인증 후 표시) -->
+      <div id="devMenuPanel" style="display:none;background:#FFFBE8;border:2px solid #FFD040;border-radius:12px;padding:12px;margin-top:4px;">
+        <div style="font-family:'Press Start 2P',monospace;font-size:11px;color:#AA6600;margin-bottom:10px;">🛠️ 개발자 메뉴</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;">
+          <button class="dev-btn" onclick="advDay()">다음날 →</button>
+          <button class="dev-btn" onclick="backDay()">← 이전날</button>
+          <button class="dev-btn" onclick="addBones(10)">🦴+10</button>
+          <button class="dev-btn" onclick="forceMonsterSpawn()">👾 강제등장</button>
+          <button class="dev-btn" onclick="openSetSeasonStart()">📅 시즌시작일</button>
+          <button class="dev-btn" onclick="forceMigrate()">🔧 마이그레이션</button>
+          <button class="dev-btn" onclick="resetGame()">🔄 초기화</button>
+          <button class="dev-btn" onclick="openDevPwChange()">🔑 비번 변경</button>
+          <button class="dev-btn" style="background:#FFE0E0;border-color:#FF9999;color:#CC3333;" onclick="closeDevMenu()">✕ 닫기</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 고정 네비게이션 바 -->
+<div class="nav-bar">
+  <button class="nav-btn active" id="nav-main" onclick="gotoScreen('main')"><span>🏠</span>홈</button>
+  <button class="nav-btn" id="nav-stamps" onclick="gotoScreen('stamps')"><span>📅</span>스탬프</button>
+  <button class="nav-btn" id="nav-shop" onclick="gotoScreen('shop')"><span>🏪</span>상점</button>
+  <button class="nav-btn" id="nav-schedule" onclick="gotoScreen('schedule')"><span>⚙️</span>스케쥴</button>
+</div>
+
+<!-- 스탬프 확인 모달 -->
+<div id="stampConfirmModal" style="position:fixed;inset:0;background:#00000055;display:none;align-items:center;justify-content:center;z-index:300;">
+  <div style="background:#FFF;border:3px solid #FFB3D9;border-radius:16px;padding:22px;width:82%;max-width:300px;text-align:center;font-family:'Press Start 2P',monospace;">
+    <div id="stampConfirmIcon" style="font-size:36px;margin-bottom:8px;"></div>
+    <div id="stampConfirmName" style="font-size:13px;color:#CC3377;margin-bottom:6px;"></div>
+    <div id="stampConfirmEffect" style="font-size:10px;color:#AA6688;margin-bottom:18px;"></div>
+    <div style="display:flex;gap:10px;justify-content:center;">
+      <button id="stampConfirmOk" style="background:linear-gradient(135deg,#FFB3D9,#FF85C2);border:2px solid #FF5599;color:#FFF;font-family:'Press Start 2P',monospace;font-size:11px;padding:11px 20px;border-radius:8px;cursor:pointer;">✓ 도장!</button>
+      <button onclick="document.getElementById('stampConfirmModal').style.display='none'" style="background:#EEE;border:2px solid #CCC;color:#666;font-family:'Press Start 2P',monospace;font-size:11px;padding:11px 16px;border-radius:8px;cursor:pointer;">취소</button>
+    </div>
+  </div>
+</div>
+
+<!-- 상품 삭제 확인 모달 -->
+<div id="shopDelModal" style="position:fixed;inset:0;background:#00000066;display:none;align-items:center;justify-content:center;z-index:310;">
+  <div style="background:#FFF;border:3px solid #FF9999;border-radius:16px;padding:22px;width:82%;max-width:300px;text-align:center;font-family:'Press Start 2P',monospace;">
+    <div style="font-size:28px;margin-bottom:8px;">🗑️</div>
+    <div style="font-size:11px;color:#CC2244;margin-bottom:6px;">상품을 삭제할까요?</div>
+    <div id="shopDelName" style="font-size:13px;color:#444;margin-bottom:16px;"></div>
+    <div style="display:flex;gap:10px;justify-content:center;">
+      <button onclick="shopDeleteItem(_shopDeleteId);document.getElementById('shopDelModal').style.display='none';"
+        style="background:linear-gradient(135deg,#FF8888,#FF4444);border:2px solid #CC2222;color:#FFF;font-family:'Press Start 2P',monospace;font-size:11px;padding:11px 18px;border-radius:8px;cursor:pointer;">삭제</button>
+      <button onclick="document.getElementById('shopDelModal').style.display='none';"
+        style="background:#EEE;border:2px solid #CCC;color:#666;font-family:'Press Start 2P',monospace;font-size:11px;padding:11px 18px;border-radius:8px;cursor:pointer;">취소</button>
+    </div>
+  </div>
+</div>
+
+<!-- 상품 추가 모달 -->
+<div id="shopAddModal" style="position:fixed;inset:0;background:#00000066;display:none;align-items:center;justify-content:center;z-index:300;">
+  <div style="background:#FFF;border:3px solid #AADDCC;border-radius:16px;padding:18px;width:90%;max-width:360px;font-family:'Press Start 2P',monospace;">
+    <div style="font-size:12px;color:#226644;margin-bottom:14px;" id="shopAddTitle">➕ 상품 추가</div>
+    <div style="font-size:9px;color:#559966;margin-bottom:6px;">🎯 아이콘 선택</div>
+    <div id="shopIconPicker" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px;max-height:100px;overflow-y:auto;"></div>
+    <div style="font-size:9px;color:#559966;margin-bottom:5px;">📝 상품 이름</div>
+    <input id="shopAddName" type="text" maxlength="10" placeholder="이름 입력"
+      style="width:100%;border:2px solid #AADDCC;border-radius:8px;font-family:'Press Start 2P',monospace;font-size:12px;padding:8px;box-sizing:border-box;margin-bottom:10px;outline:none;">
+    <div style="font-size:9px;color:#559966;margin-bottom:5px;">🦴 필요 뼛조각 수</div>
+    <input id="shopAddCost" type="number" min="1" max="999" placeholder="예: 10"
+      style="width:100%;border:2px solid #AADDCC;border-radius:8px;font-family:'Press Start 2P',monospace;font-size:12px;padding:8px;box-sizing:border-box;margin-bottom:14px;outline:none;">
+    <div style="display:flex;gap:8px;">
+      <button onclick="confirmShopAdd()" style="flex:1;background:linear-gradient(135deg,#AAFFCC,#55EE88);border:2px solid #33CC66;color:#114422;font-family:'Press Start 2P',monospace;font-size:10px;padding:10px;border-radius:8px;cursor:pointer;">✓ 추가</button>
+      <button onclick="closeShopAddModal()" style="background:#EEE;border:2px solid #CCC;color:#666;font-family:'Press Start 2P',monospace;font-size:10px;padding:10px 14px;border-radius:8px;cursor:pointer;">취소</button>
+    </div>
+    <div id="shopAddErr" style="font-size:9px;color:#FF4466;margin-top:8px;min-height:13px;"></div>
+  </div>
+</div>
+
+<!-- 초기화 확인 모달 -->
+<div id="resetConfirmModal" style="position:fixed;inset:0;background:#00000066;display:none;align-items:center;justify-content:center;z-index:300;">
+  <div style="background:#FFF;border:3px solid #FF8888;border-radius:16px;padding:20px;width:88%;max-width:340px;font-family:'Press Start 2P',monospace;">
+    <div style="font-size:14px;text-align:center;margin-bottom:12px;">⚠️ 초기화 선택</div>
+    <div style="font-size:9px;color:#888;margin-bottom:14px;text-align:center;">초기화할 항목을 선택해주세요</div>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:18px;">
+      <label style="display:flex;align-items:center;gap:10px;font-size:10px;color:#444;cursor:pointer;">
+        <input type="checkbox" id="rst-stats" checked style="width:18px;height:18px;cursor:pointer;"> ⚔️ 능력치 (공격/방어/체력/마법)
+      </label>
+      <label style="display:flex;align-items:center;gap:10px;font-size:10px;color:#444;cursor:pointer;">
+        <input type="checkbox" id="rst-stamps" checked style="width:18px;height:18px;cursor:pointer;"> 📅 스탬프 기록
+      </label>
+      <label style="display:flex;align-items:center;gap:10px;font-size:10px;color:#444;cursor:pointer;">
+        <input type="checkbox" id="rst-bones" checked style="width:18px;height:18px;cursor:pointer;"> 🦴 뼛조각 & 구매 내역
+      </label>
+      <label style="display:flex;align-items:center;gap:10px;font-size:10px;color:#444;cursor:pointer;">
+        <input type="checkbox" id="rst-schedule" style="width:18px;height:18px;cursor:pointer;"> ⚙️ 스케쥴 & 도장 목록
+      </label>
+      <label style="display:flex;align-items:center;gap:10px;font-size:10px;color:#444;cursor:pointer;">
+        <input type="checkbox" id="rst-shop" style="width:18px;height:18px;cursor:pointer;"> 🏪 상점 목록
+      </label>
+      <label style="display:flex;align-items:center;gap:10px;font-size:10px;color:#444;cursor:pointer;">
+        <input type="checkbox" id="rst-day" checked style="width:18px;height:18px;cursor:pointer;"> 📆 Day 카운트
+      </label>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:center;">
+      <button onclick="doResetGame()" style="background:linear-gradient(135deg,#FF8888,#FF4444);border:2px solid #CC2222;color:#FFF;font-family:'Press Start 2P',monospace;font-size:11px;padding:11px 18px;border-radius:8px;cursor:pointer;">초기화</button>
+      <button onclick="document.getElementById('resetConfirmModal').style.display='none'" style="background:#EEE;border:2px solid #CCC;color:#666;font-family:'Press Start 2P',monospace;font-size:11px;padding:11px 18px;border-radius:8px;cursor:pointer;">취소</button>
+    </div>
+  </div>
+</div>
+<!-- 시즌 시작일 설정 모달 -->
+<div id="seasonStartModal" style="position:fixed;inset:0;background:#00000066;display:none;align-items:center;justify-content:center;z-index:300;">
+  <div style="background:#FFF;border:3px solid #88DDFF;border-radius:16px;padding:20px;width:86%;max-width:320px;text-align:center;font-family:'Press Start 2P',monospace;">
+    <div style="font-size:12px;color:#0066AA;margin-bottom:6px;">📅 시즌 시작일 설정</div>
+    <div style="font-size:9px;color:#888;margin-bottom:12px;">현재: <span id="curSeasonStart"></span></div>
+    <input id="seasonStartInput" type="date"
+      style="width:100%;border:2px solid #88DDFF;border-radius:8px;font-size:14px;padding:8px;box-sizing:border-box;margin-bottom:8px;outline:none;text-align:center;">
+    <div style="font-size:9px;color:#AA6600;margin-bottom:14px;">⚠️ 설정 후 소급 전투가 자동 실행됩니다</div>
+    <div style="display:flex;gap:8px;justify-content:center;">
+      <button onclick="applySeasonStart()" style="background:linear-gradient(135deg,#88DDFF,#44AAFF);border:2px solid #0088CC;color:#FFF;font-family:'Press Start 2P',monospace;font-size:11px;padding:10px 18px;border-radius:8px;cursor:pointer;">적용</button>
+      <button onclick="document.getElementById('seasonStartModal').style.display='none'" style="background:#EEE;border:2px solid #CCC;color:#666;font-family:'Press Start 2P',monospace;font-size:11px;padding:10px 18px;border-radius:8px;cursor:pointer;">취소</button>
+    </div>
+  </div>
+</div>
+
+<div id="devAuthModal" style="position:fixed;inset:0;background:#00000066;display:none;align-items:center;justify-content:center;z-index:300;">
+  <div style="background:#FFF;border:3px solid #FFD040;border-radius:16px;padding:20px;width:86%;max-width:320px;text-align:center;font-family:'Press Start 2P',monospace;">
+    <div style="font-size:13px;color:#AA6600;margin-bottom:14px;">🔐 개발자 모드</div>
+    <input id="devPwInput" type="password" placeholder="비밀번호"
+      style="width:100%;border:2px solid #FFD040;border-radius:8px;font-family:'Press Start 2P',monospace;font-size:13px;padding:10px;box-sizing:border-box;text-align:center;outline:none;margin-bottom:12px;"
+      onkeydown="if(event.key==='Enter')checkDevPw()">
+    <div style="display:flex;gap:8px;justify-content:center;">
+      <button onclick="checkDevPw()" style="background:linear-gradient(135deg,#FFE060,#FFA530);border:2px solid #FF8C00;color:#3D2060;font-family:'Press Start 2P',monospace;font-size:11px;padding:10px 18px;border-radius:8px;cursor:pointer;">확인</button>
+      <button onclick="closeDevAuth()" style="background:#EEE;border:2px solid #CCC;color:#666;font-family:'Press Start 2P',monospace;font-size:11px;padding:10px 18px;border-radius:8px;cursor:pointer;">취소</button>
+    </div>
+    <div id="devAuthErr" style="font-size:10px;color:#FF4466;margin-top:10px;min-height:14px;"></div>
+  </div>
+</div>
+
+<!-- 비밀번호 변경 모달 -->
+<div id="devPwModal" style="position:fixed;inset:0;background:#00000066;display:none;align-items:center;justify-content:center;z-index:300;">
+  <div style="background:#FFF;border:3px solid #C8AAFF;border-radius:16px;padding:20px;width:86%;max-width:320px;text-align:center;font-family:'Press Start 2P',monospace;">
+    <div style="font-size:12px;color:#6633AA;margin-bottom:14px;">🔑 비밀번호 변경</div>
+    <input id="devPwNew1" type="password" placeholder="새 비밀번호"
+      style="width:100%;border:2px solid #C8AAFF;border-radius:8px;font-family:'Press Start 2P',monospace;font-size:12px;padding:9px;box-sizing:border-box;margin-bottom:8px;outline:none;">
+    <input id="devPwNew2" type="password" placeholder="새 비밀번호 확인"
+      style="width:100%;border:2px solid #C8AAFF;border-radius:8px;font-family:'Press Start 2P',monospace;font-size:12px;padding:9px;box-sizing:border-box;margin-bottom:12px;outline:none;">
+    <div style="display:flex;gap:8px;justify-content:center;">
+      <button onclick="saveDevPw()" style="background:linear-gradient(135deg,#C8AAFF,#9966EE);border:2px solid #7733CC;color:#FFF;font-family:'Press Start 2P',monospace;font-size:11px;padding:10px 18px;border-radius:8px;cursor:pointer;">변경</button>
+      <button onclick="closeDevPwModal()" style="background:#EEE;border:2px solid #CCC;color:#666;font-family:'Press Start 2P',monospace;font-size:11px;padding:10px 18px;border-radius:8px;cursor:pointer;">취소</button>
+    </div>
+    <div id="devPwErr" style="font-size:10px;color:#FF4466;margin-top:10px;min-height:14px;"></div>
+  </div>
+</div>
+<div id="battle-ov">
+  <div class="bx">
+    <div class="bx-ttl">⚔️ 몬스터 출현! ⚔️</div>
+    <!-- 전투 캔버스 — 가로 꽉 채움 -->
+    <canvas id="bCanvas" width="420" height="200"></canvas>
+    <!-- 몬스터 정보 — 가로 한 줄 -->
+    <div class="mon-profile" id="monProfile">
+      <div class="mon-emoji" id="monEmoji">👾</div>
+      <div class="mon-name" id="monName">???</div>
+      <div class="mon-sep">│</div>
+      <div class="mon-desc" id="monDesc">...</div>
+    </div>
+    <!-- 전투 로그 -->
+    <div class="blog" id="bLog"></div>
+    <button class="bconf" id="bConfBtn" style="display:none" onclick="closeBattle()">확인 ✓</button>
+  </div>
+</div>
+<!-- CLOUD MODAL -->
+<div id="cloudModal" style="position:fixed;inset:0;background:#3D206088;display:none;align-items:center;justify-content:center;z-index:300;backdrop-filter:blur(4px);">
+  <div style="background:#FFF;border:4px solid #FFB3D9;border-radius:20px;padding:20px;width:92%;max-width:400px;box-shadow:0 8px 32px #FF85C244;font-family:'Press Start 2P',monospace;">
+    <div style="font-size:14px;color:#CC3377;margin-bottom:6px;">☁️ 가족 클라우드 연결</div>
+    <div style="font-size:9px;color:#AA6688;line-height:1.8;margin-bottom:14px;">가족 코드를 공유하면<br>엄마와 아이가 같은 데이터를<br>어디서든 불러올 수 있어요! 💕</div>
+    <div style="font-size:9px;color:#AA3366;margin-bottom:5px;">👨‍👩‍👧 가족 코드 (영문+숫자 4자 이상)</div>
+    <input id="cmFamilyCode" style="width:100%;border:2px solid #FFB3D9;border-radius:10px;font-family:'Press Start 2P',monospace;font-size:10px;padding:9px 12px;color:#3D2060;background:#FFF8FF;outline:none;margin-bottom:10px;box-sizing:border-box;" type="text" maxlength="12" placeholder="예: summer2025" autocomplete="off" oninput="this.value=this.value.replace(/[^a-zA-Z0-9]/g,'').toLowerCase()">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button onclick="fbConnect()" style="flex:1;background:linear-gradient(135deg,#FFB3D9,#FF85C2);border:2px solid #FF5599;color:#FFF;font-family:'Press Start 2P',monospace;font-size:10px;padding:9px 16px;border-radius:10px;cursor:pointer;">🔗 연결하기</button>
+      <button onclick="closeCloudModal()" style="background:#F0F0F0;border:2px solid #DDD;color:#888;font-family:'Press Start 2P',monospace;font-size:10px;padding:9px 14px;border-radius:10px;cursor:pointer;">닫기</button>
+      <button onclick="fbDisconnect()" style="background:#FFF0F0;border:2px solid #FFAAAA;color:#CC2244;font-family:'Press Start 2P',monospace;font-size:10px;padding:9px 14px;border-radius:10px;cursor:pointer;">해제</button>
+    </div>
+    <div id="cmStatus" style="font-size:9px;color:#AA6688;margin-top:10px;min-height:16px;text-align:center;"></div>
+  </div>
+</div>
+
+<div class="notif" id="notif"></div>
+
+<!-- Firebase SDK -->
+<script type="module">
+import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import{getDatabase,ref,set,get,onValue}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+const app=initializeApp({apiKey:"AIzaSyB5IxztyU4k1p7-PJSUKh2-T6kbUjlbzmM",authDomain:"studysummer.firebaseapp.com",databaseURL:"https://studysummer-default-rtdb.firebaseio.com",projectId:"studysummer",storageBucket:"studysummer.firebasestorage.app",messagingSenderId:"460730500520",appId:"1:460730500520:web:c0227f7fa26e400301099d"});
+const db=getDatabase(app);
+window._fbSet=(p,d)=>set(ref(db,p),d);
+window._fbGet=(p)=>get(ref(db,p));
+window._fbOnValue=(p,cb)=>onValue(ref(db,p),cb);
+</script>
+
+<script>
+// ─── CONSTANTS ───────────────────────────────────
+const DEFAULT_SHOP_ITEMS=[
+  {id:'nemo',      name:'네모스낵',  icon:'🥨', cost:3},
+  {id:'apollo',    name:'아폴로',    icon:'🍭', cost:4},
+  {id:'icecream',  name:'아이스크림',icon:'🍦', cost:7},
+  {id:'ramen',     name:'라면',      icon:'🍝', cost:12},
+  {id:'ddukchoco', name:'두쫀쿠',    icon:'🍬', cost:15},
+  {id:'jjajang',   name:'짜장면',    icon:'🍜', cost:18},
+  {id:'chicken',   name:'치킨',      icon:'🍗', cost:30},
+];
+
+// 기존 SHOP_ITEMS는 buyItem 호환용으로 유지 (동적으로 G.customShopItems 사용)
+const SHOP_ICONS=['🍗','🍜','🍝','🍬','🍦','🍭','🥨','🍕','🍔','🍟','🌮','🍣','🍱','🎂','🧁','🍩','🍫','🍿','🥤','🧃','🎁','🎮','📚','✏️','⭐','💎','🏆','🎵','🎨','🎪'];
+
+const STAMP_ICONS=['📖','✏️','📝','🎵','💛','✍️','🎼','🍎','⭐','🌈'];
+const STAMP_COLORS=['#FF4466','#2277EE','#11AA55','#9922DD','#FF9900'];
+const COLOR_BG    =['#FFE8EF','#E8F0FF','#E8FFF0','#F5E8FF','#FFF8E0'];
+const STAT_OPTS=[
+  {k:'atk',label:'⚔️ 공격력'},{k:'def',label:'🛡️ 방어력'},
+  {k:'hp', label:'❤️ 체력'}, {k:'mag',label:'✨ 마법'},
+  {k:'rand',label:'🎲 랜덤'},
+];
+const DEFAULT_STAMPS=[
+  {id:'eng',  name:'영어', icon:'📖', color:'#FF4466', stat:'atk'},
+  {id:'math', name:'수학', icon:'✏️', color:'#2277EE', stat:'def'},
+  {id:'kor',  name:'국어', icon:'📝', color:'#11AA55', stat:'hp'},
+  {id:'music',name:'악보', icon:'🎵', color:'#9922DD', stat:'mag'},
+  {id:'help', name:'도움', icon:'💛', color:'#FF9900', stat:'rand'},
+];
+const MONSTERS=[
+  {name:'게으름 대장',   emoji:'😴', ti:0, title:'나태의 왕',    desc:'너무너무 게을러서 게으르는 것조차 귀찮은 몬스터. 하품이 무기다.',           weakness:'부지런함', hobby:'낮잠(하루 23시간)', age:'모름(일어나기 귀찮아서 세는 거 포기)'},
+  {name:'숙제 도둑',    emoji:'📋', ti:1, title:'과제 약탈자',   desc:'숙제를 훔쳐가서 절대 돌려주지 않는다. 가방 속에 남의 숙제가 가득하다.',       weakness:'직접 풀기', hobby:'숙제 수집', age:'초등학교 영원 재학 중'},
+  {name:'핸드폰 유령',  emoji:'📱', ti:2, title:'스크린 타임 마왕', desc:'유튜브 쇼츠를 틀어서 공부를 방해한다. 배터리는 항상 100%다.',             weakness:'집중 모드', hobby:'릴스 무한 스크롤', age:'스마트폰 출시 이후'},
+  {name:'졸음 마녀',    emoji:'💤', ti:3, title:'수면 저주사',    desc:'공부하면 갑자기 눈꺼풀을 무겁게 만드는 마법을 쓴다. 본인도 자주 잠든다.',     weakness:'커피 냄새', hobby:'졸음 전파하기', age:'잠결에 잊어버림'},
+  {name:'딴생각 요정',  emoji:'🌈', ti:0, title:'몽상의 요정',   desc:'갑자기 딴 생각이 떠오르게 만드는 능력을 가졌다. 어제 먹은 치킨이 왜 생각나?', weakness:'메모하기', hobby:'무한 상상', age:'영원히 12살'},
+  {name:'지우개 괴물',  emoji:'🧹', ti:1, title:'오답 제조기',   desc:'열심히 쓴 답을 지워버리고 도망간다. 손은 항상 지우개 가루 투성이다.',        weakness:'샤프 펜슬', hobby:'지우기', age:'필기구 역사만큼'},
+  {name:'시험지 악마',  emoji:'📄', ti:2, title:'100점 천적',    desc:'시험지를 뒤집어 놓고 제한 시간을 몰래 줄인다. 마지막 장은 항상 숨겨놓는다.',  weakness:'시간 관리', hobby:'마지막 문제 숨기기', age:'시험 제도 이후'},
+  {name:'알람 킬러',    emoji:'⏰', ti:3, title:'기상 방해자',   desc:'알람을 대신 끄고 5분만 더 자게 유혹한다. 5분이 2시간이 되어버린다.',          weakness:'두 번째 알람', hobby:'알람 끄기', age:'알람 시계 발명 이후'},
+  {name:'집중력 도둑',  emoji:'🦋', ti:4, title:'산만함의 군주', desc:'창 밖의 나비가 되어 시선을 빼앗는다. 공부방에는 절대 혼자 살지 않는다.',      weakness:'귀마개', hobby:'나비 행세', age:'주의력 결핍이 생긴 이후'},
+  {name:'엄살 대왕',    emoji:'🤒', ti:0, title:'꾀병 전문가',   desc:'공부하려 하면 갑자기 배가 아프게 만든다. 놀 때는 언제나 멀쩡해진다.',        weakness:'진짜 의지', hobby:'체온계 올리기', age:'꾀병 역사만큼'},
+  {name:'간식 유혹자',  emoji:'🍪', ti:1, title:'군것질 마법사', desc:'공부 중에 갑자기 배고픔을 느끼게 한다. 냉장고 문을 열게 만드는 전문가다.',     weakness:'규칙적인 식사', hobby:'과자 광고 틀기', age:'간식 발명 이후'},
+  {name:'미루기 군주',  emoji:'🗓️', ti:2, title:'내일의 황제',  desc:'"내일 하면 되잖아"를 300번 반복한다. 내일도 내일이 온다는 걸 알고 있다.',     weakness:'오늘 당장', hobby:'일정 미루기', age:'달력 만들어진 이후'},
+  {name:'비교 마귀',    emoji:'😈', ti:3, title:'자존감 파괴자', desc:'"옆집 애는 벌써 다 했다던데"를 속삭인다. 정작 본인은 아무것도 안 한다.',      weakness:'나만의 속도', hobby:'남과 비교하기', age:'질투 생긴 이후'},
+  {name:'완벽주의 귀신', emoji:'👻', ti:4, title:'시작 방해령',  desc:'시작하기 전에 완벽한 준비를 요구한다. 그래서 결국 아무것도 못 시작하게 만든다.', weakness:'일단 시작', hobby:'준비물 점검(무한반복)', age:'완벽주의 탄생 이후'},
+  {name:'소셜미디어 마수', emoji:'📸', ti:0, title:'피드 중독자', desc:'좋아요 수를 계속 확인하게 만든다. 공부하다 갑자기 인스타를 열게 한다.',        weakness:'앱 잠금', hobby:'피드 새로고침', age:'SNS 탄생 이후'},
+  {name:'독해 방해꾼',  emoji:'📚', ti:1, title:'집중력 분해기', desc:'같은 줄을 열 번 읽어도 이해 못 하게 한다. 페이지 수는 늘어나지 않는다.',      weakness:'천천히 읽기', hobby:'눈동자 흔들기', age:'활자 생긴 이후'},
+  {name:'계산 실수령',  emoji:'🧮', ti:2, title:'오답 전도사',  desc:'마지막에 덧셈을 반드시 틀리게 만든다. 항상 자리올림을 빼먹게 한다.',           weakness:'두 번 검토', hobby:'올림 숫자 지우기', age:'수학 탄생 이후'},
+  {name:'끙끙 걱정벌레', emoji:'😰', ti:3, title:'불안의 대가', desc:'시험 전날 잠 못 자게 만드는 전문가. 걱정을 먹고 자란다.',                      weakness:'충분한 연습', hobby:'최악의 상황 상상', age:'시험 제도 이후'},
+  {name:'딴짓 요괴',    emoji:'🎮', ti:4, title:'놀이터 소환사', desc:'책상에 앉으면 갑자기 레고나 게임이 눈에 들어오게 만든다.',                     weakness:'책상 정리', hobby:'장난감 소환', age:'장난감 발명 이후'},
+  {name:'허기진 수학귀', emoji:'🍕', ti:0, title:'배고픔 조율사', desc:'수학 문제 풀 때만 배고파지게 만드는 특수 능력 보유. 피자를 무기로 쓴다.',       weakness:'사전 간식', hobby:'수학책에 피자 냄새 뿌리기', age:'피자 발명 이후'},
+  {name:'볼펜 먹는 새', emoji:'🐦', ti:1, title:'필기구 약탈자', desc:'중요한 순간에 볼펜을 없애버린다. 항상 뚜껑만 남겨놓는다.',                     weakness:'여분 필기구', hobby:'볼펜 뚜껑 모으기', age:'볼펜 발명 이후'},
+  {name:'약속 파괴자',  emoji:'💔', ti:2, title:'결심 분쇄기',  desc:'"오늘만 쉬자"는 속삭임의 전문가. 한 번 허락하면 매일 온다.',                    weakness:'공부 친구', hobby:'결심 부수기', age:'결심이 생긴 이후'},
+  {name:'글자 뒤집개',  emoji:'🔄', ti:3, title:'독서 방해령',  desc:'책을 읽다 보면 갑자기 글자가 춤추게 만든다. 졸릴 때 특히 심해진다.',           weakness:'충분한 수면', hobby:'글자 섞기', age:'인쇄술 발명 이후'},
+  {name:'시간 먹는 하마', emoji:'🦛', ti:4, title:'시간 낭비 챔피언', desc:'10분이면 될 일을 2시간으로 늘려놓는다. 효율의 반대말이다.',              weakness:'타이머', hobby:'시간 늘리기', age:'시간이 생긴 이후'},
+  {name:'공책 오염마',  emoji:'🖊️', ti:0, title:'낙서 소환사', desc:'공책 여백에 낙서를 그리게 만드는 유혹자. 나중에 보면 낙서가 더 많다.',          weakness:'격자 노트', hobby:'낙서 감상', age:'종이 발명 이후'},
+  {name:'벼락치기 귀신', emoji:'⚡', ti:1, title:'시험 전날 폭탄', desc:'평소엔 안 보이다가 시험 전날 밤 갑자기 나타난다. 이미 늦었다며 조롱한다.',    weakness:'꾸준한 복습', hobby:'시험 전날 공포 조장', age:'시험 제도 이후'},
+  {name:'노래 귀벌레',  emoji:'🎵', ti:2, title:'이어웜 대왕',  desc:'공부 중에 갑자기 노래가 머릿속을 떠나지 않게 만든다. 멈출 수가 없다.',          weakness:'클래식 음악', hobby:'중독성 강한 노래 삽입', age:'음악 생긴 이후'},
+  {name:'의자 불편마',  emoji:'🪑', ti:3, title:'자세 파괴자',  desc:'앉아 있으면 갑자기 엉덩이가 불편해지게 만든다. 계속 일어나고 싶어진다.',        weakness:'좋은 의자', hobby:'허리 아프게 하기', age:'의자 발명 이후'},
+  {name:'문제집 분실마', emoji:'🔍', ti:4, title:'물건 숨김의 달인', desc:'꼭 필요한 문제집을 소파 쿠션 밑에 숨겨놓는다. 찾는 데만 30분 걸린다.',     weakness:'정해진 자리', hobby:'물건 숨기기', age:'물건 분실 역사만큼'},
+  {name:'오늘의 마지막 보스', emoji:'👑', ti:4, title:'공부의 최종 적', desc:'모든 나쁜 습관을 합친 궁극의 몬스터. 그냥 공부하기 싫은 마음 그 자체다.',  weakness:'엄마의 눈빛', hobby:'합리화', age:'공부 생긴 이후'},
+];
+
+const CLASS_NAMES={base:'초보 모험가',atk:['견습 기사','기사','상급 기사','기사장','전설의 검사'],def:['견습 방패사','방패 전사','철벽 수호자','성채 수호자','성벽의 화신'],hp:['힘의 수련자','근육 전사','강철 근육','불굴의 전사','무적의 거인'],mag:['마법 견습생','마법사','대마법사','마법 현자','마법의 현자']};
+
+// ─── CHARACTER CLASS RESOURCE TABLE ──────────────
+// 이미지가 있으면 img/ 경로에서 로드, 없으면 픽셀 캔버스로 폴백
+const CHAR_CLASSES=[
+  {stat:'base', lv:0, name:'초보 모험가',  img:'img/char_base.png'},
+  {stat:'atk',  lv:1, name:'견습 기사',    img:'img/char_atk_1.png'},
+  {stat:'atk',  lv:2, name:'기사',         img:'img/char_atk_2.png'},
+  {stat:'atk',  lv:3, name:'상급 기사',    img:'img/char_atk_3.png'},
+  {stat:'atk',  lv:4, name:'기사장',       img:'img/char_atk_4.png'},
+  {stat:'atk',  lv:5, name:'전설의 검사',  img:'img/char_atk_5.png'},
+  {stat:'def',  lv:1, name:'견습 방패사',  img:'img/char_def_1.png'},
+  {stat:'def',  lv:2, name:'방패 전사',    img:'img/char_def_2.png'},
+  {stat:'def',  lv:3, name:'철벽 수호자',  img:'img/char_def_3.png'},
+  {stat:'def',  lv:4, name:'성채 수호자',  img:'img/char_def_4.png'},
+  {stat:'def',  lv:5, name:'성벽의 화신',  img:'img/char_def_5.png'},
+  {stat:'hp',   lv:1, name:'힘의 수련자',  img:'img/char_hp_1.png'},
+  {stat:'hp',   lv:2, name:'근육 전사',    img:'img/char_hp_2.png'},
+  {stat:'hp',   lv:3, name:'강철 근육',    img:'img/char_hp_3.png'},
+  {stat:'hp',   lv:4, name:'불굴의 전사',  img:'img/char_hp_4.png'},
+  {stat:'hp',   lv:5, name:'무적의 거인',  img:'img/char_hp_5.png'},
+  {stat:'mag',  lv:1, name:'마법 견습생',  img:'img/char_mag_1.png'},
+  {stat:'mag',  lv:2, name:'마법사',       img:'img/char_mag_2.png'},
+  {stat:'mag',  lv:3, name:'대마법사',     img:'img/char_mag_3.png'},
+  {stat:'mag',  lv:4, name:'마법 현자',    img:'img/char_mag_4.png'},
+  {stat:'mag',  lv:5, name:'마법의 현자',  img:'img/char_mag_5.png'},
+];
+
+// 이미지 캐시 (로드된 이미지 재사용)
+const _imgCache={};
+
+// 이미지 로드 시도 → 성공하면 캐시, 실패하면 null 캐시
+function loadCharImg(src){
+  return new Promise(resolve=>{
+    if(_imgCache[src]!==undefined){resolve(_imgCache[src]);return;}
+    const img=new Image();
+    img.onload=()=>{_imgCache[src]=img;resolve(img);};
+    img.onerror=()=>{_imgCache[src]=null;resolve(null);};
+    img.src=src;
+  });
+}
+
+// 이미지 있으면 이미지, 없으면 픽셀 캔버스
+async function drawCharSmart(canvas, bob){
+  const d=dom(), lv=d==="base"?0:slv();
+  const entry=CHAR_CLASSES.find(c=>c.stat===d&&c.lv===lv)
+            ||CHAR_CLASSES.find(c=>c.stat==='base');
+  const img=await loadCharImg(entry.img);
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  if(img){
+    // 이미지 모드: 캔버스 중앙에 그리기
+    const scale=canvas.height/img.naturalHeight; // 높이 기준 스케일
+      const w=img.naturalWidth*scale, h=img.naturalHeight*scale;
+      const x=(canvas.width-w)/2, y=(bob||0);
+    ctx.drawImage(img,x,y,w,h);
+  } else {
+    // 폴백: 기존 픽셀 캔버스
+    drawChar(canvas, bob);
+  }
+}
+
+// ─── DATE UTILS ───────────────────────────────────
+const dk=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const fd=d=>`${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+const fmt=(y,m)=>`${y}년 ${['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'][m]}`;
+
+// ─── STATE ───────────────────────────────────────
+let G={
+  currentDate:new Date(),
+  seasonStartDate:'', // load() 또는 init에서 설정
+  dayCount:1,
+  stats:{atk:10,def:10,hp:10,mag:10},bones:0,
+  stamps:{},
+  customStamps:JSON.parse(JSON.stringify(DEFAULT_STAMPS)),
+  customShopItems:JSON.parse(JSON.stringify(DEFAULT_SHOP_ITEMS)),
+  weekSchedule:{1:[],2:[],3:[],4:[],5:[]},
+  nextMonsterDate:'', // 실제 날짜로 관리 (load/reset 시 설정)
+  battlePending:false,pendingMonster:null,battles:[],purchases:[],
+  syncMode:false,defeatCount:0,
+  season:1,
+  monsterNerfed:false,
+};
+let calY=2024,calM=0,animId=null,battleAnimId=null;
+
+// ─── SAVE/LOAD ────────────────────────────────────
+function save(){try{const s=JSON.parse(JSON.stringify(G));s.currentDate=G.currentDate.toISOString();localStorage.setItem('sa5',JSON.stringify(s));}catch(e){}scheduleCloudSave();}
+// dayCount = 시즌 시작일로부터 오늘까지 경과 일수 (자동 계산)
+function calcDayCount(){
+  if(!G.seasonStartDate) return G.dayCount||1;
+  const start=new Date(G.seasonStartDate);
+  const today=new Date(G.currentDate);
+  // 시간 차이를 날짜 단위로 계산 (타임존 영향 제거)
+  start.setHours(0,0,0,0);today.setHours(0,0,0,0);
+  const diff=Math.floor((today-start)/(1000*60*60*24));
+  return Math.max(1, diff+1);
+}
+
+// 이번 달 1일 반환
+function thisMonthFirst(){
+  const d=new Date(G.currentDate);
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`;
+}
+
+function load(){
+  try{
+    const r=localStorage.getItem('sa5');if(!r)return;
+    const s=JSON.parse(r);
+    s.currentDate=new Date(s.currentDate);
+    if(!s.customStamps)s.customStamps=JSON.parse(JSON.stringify(DEFAULT_STAMPS));
+    if(!s.weekSchedule)s.weekSchedule={1:[],2:[],3:[],4:[],5:[]};
+    if(!s.customShopItems)s.customShopItems=JSON.parse(JSON.stringify(DEFAULT_SHOP_ITEMS));
+    if(!s.season)s.season=1;
+    if(s.monsterNerfed===undefined)s.monsterNerfed=false;
+    if(s.syncMode===undefined)s.syncMode=false;
+    if(s.defeatCount===undefined)s.defeatCount=0;
+    // seasonStartDate 마이그레이션: 이번달 1일 기준
+    if(!s.seasonStartDate){
+      const d=new Date();
+      s.seasonStartDate=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`;
+    }
+    // nextMonsterDate 마이그레이션
+    if(!s.nextMonsterDate){
+      const remainDays=Math.min(3, Math.max(1, (s.nextMonsterDay||2)-(s.dayCount||1)));
+      s.nextMonsterDate=addDays(new Date(), remainDays);
+    }
+    G=s;
+  }catch(e){}
+  G.currentDate=new Date();
+  calY=G.currentDate.getFullYear();
+  calM=G.currentDate.getMonth();
+}
+
+// ─── STAT HELPERS ─────────────────────────────────
+function dom(){
+  const s=G.stats;
+  // 모든 스탯이 초기값 10 → base (초보 모험가)
+  if(s.atk===10&&s.def===10&&s.hp===10&&s.mag===10)return'base';
+  // 이후엔 최고 스탯 기준, 동점시 atk>mag>def>hp 우선
+  const mx=Math.max(s.atk,s.def,s.hp,s.mag);
+  if(s.atk>=mx)return'atk';if(s.mag>=mx)return'mag';if(s.def>=mx)return'def';return'hp';
+}
+// 총 스탬프 수 기준 레벨 계산 (90번 = Lv.5, 18번마다 레벨업)
+const totStamps=()=>G.stats.atk+G.stats.def+G.stats.hp+G.stats.mag-40;
+const slv=()=>Math.min(5,Math.max(1,Math.floor(totStamps()/18)+1));
+const isMaxLevel=()=>totStamps()>=90;
+function classLabel(){
+  const d=dom();
+  if(d==='base') return CLASS_NAMES.base;
+  return CLASS_NAMES[d][slv()-1];
+}
+const totPow=()=>G.stats.atk+G.stats.def+G.stats.hp+G.stats.mag;
+
+// ─── CUTE CHIBI CHARACTER ─────────────────────────
+function drawChar(canvas,bob){
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  // P를 캔버스 높이에 비례해서 조정 (기준 210px → P=7)
+  const P=Math.round(canvas.height/30);
+  const ox=Math.floor((canvas.width-17*P)/2);
+  const oy=Math.floor((canvas.height-28*P)/2)+(bob||0);
+  const d=dom(),lv=d==='base'?0:slv();
+
+  // Palette - updated skin tone to match reference
+  const HAIR='#2C1A10',HAIR2='#4A2E1E',SKIN='#F7C9A3',SKIN2='#E8A87A';
+  const CHEEK='#F5A8B8',LIP='#D4607A',NECK=SKIN;
+  const SKRT='#AA88DD',PANT='#6666AA',SOCK='#EEEEFF',SHOE='#3A2210';
+  const GFRAME='#2A2222', GLENS='#0E0A0A'; // glasses frame & lens
+  const shirtPal={atk:['#FF9999','#FF5555','#CC0000','#990000','#660000'],def:['#99AAFF','#6677FF','#3344CC','#2233AA','#001188'],hp:['#99EEAA','#55CC77','#229944','#117733','#005522'],mag:['#CC99FF','#BB66EE','#9933DD','#6611AA','#440088'],base:'#FF9EC4'};
+  let SHIRT=shirtPal.base;if(d!=='base')SHIRT=shirtPal[d][Math.min(lv-1,4)];
+
+  const p=(x,y,w,h,c)=>{ctx.fillStyle=c;ctx.fillRect(ox+x*P,oy+y*P,w*P,h*P);};
+  const pr=(x,y,w,h,c,r=3)=>{ctx.fillStyle=c;ctx.beginPath();ctx.roundRect(ox+x*P,oy+y*P,w*P,h*P,r);ctx.fill();};
+
+  // ── HAIR BACK (behind face) ──
+  p(0,2,2,16,HAIR);   // left side hair
+  p(15,2,2,16,HAIR);  // right side hair
+  p(0,18,1,3,HAIR);p(16,18,1,3,HAIR); // taper
+
+  // ── FACE ──
+  pr(2,2,13,11,SKIN,7);
+  p(2,11,1,1,SKIN2);p(14,11,1,1,SKIN2); // jaw shadow
+
+  // ── FLAT BOWL-CUT BANGS (reference style: straight horizontal) ──
+  p(2,0,13,1,HAIR);        // crown top
+  p(1,1,15,1,HAIR);        // wide crown
+  p(2,2,13,2,HAIR);        // solid bang block covering forehead
+  p(2,4,1,1,HAIR);         // left side dip
+  p(14,4,1,1,HAIR);        // right side dip
+  // hair shine
+  p(5,1,3,1,HAIR2);p(10,1,2,1,HAIR2);
+
+  // ── NECK ──
+  p(7,13,3,1,NECK);
+
+  // ── SUBTLE CHEEKS ──
+  p(3,9,2,1,CHEEK);
+  p(12,9,2,1,CHEEK);
+
+  // ── GLASSES - frame border only, lens shows skin underneath ──
+  // Draw frame border by painting frame color, then cut out lens interior with skin
+  p(3,5,5,4,GFRAME);          // left frame block
+  p(4,6,3,2,SKIN);            // left lens interior = skin (clear)
+  p(9,5,5,4,GFRAME);          // right frame block
+  p(10,6,3,2,SKIN);           // right lens interior = skin (clear)
+  p(8,6,1,1,GFRAME);          // bridge
+  p(2,6,1,1,GFRAME);          // left ear piece
+  p(14,6,1,1,GFRAME);         // right ear piece
+
+  // ── BLACK DOT EYES (tiny, centered inside lens) ──
+  p(5,7,1,1,'#1A1A1A');       // left eye — single pixel dot
+  p(11,7,1,1,'#1A1A1A');      // right eye — single pixel dot
+
+  // ── SMALL SMILE ──
+  ctx.strokeStyle=LIP;ctx.lineWidth=P*0.4;ctx.lineCap='round';
+  ctx.beginPath();
+  ctx.moveTo(ox+6.5*P,oy+11*P);
+  ctx.bezierCurveTo(ox+7*P,oy+11.8*P,ox+10*P,oy+11.8*P,ox+10.5*P,oy+11*P);
+  ctx.stroke();
+
+  // BODY
+  pr(4,14,9,5,SHIRT,4);  // torso
+  // collar shine
+  p(7,14,3,1,'#FFFFFF33');
+
+  // ARMS
+  pr(1,14,4,4,SHIRT,4);
+  pr(12,14,4,4,SHIRT,4);
+  // Hands
+  pr(2,17,3,2,SKIN,3);
+  pr(12,17,3,2,SKIN,3);
+
+  // SKIRT flare
+  pr(3,18,11,2,SKRT,4);
+  pr(2,19,13,2,SKRT,4);
+  // skirt sparkle
+  p(8,19,1,1,'#FFFFFF44');p(5,18,1,1,'#FFFFFF33');
+
+  // LEGS
+  p(4,21,4,3,PANT);
+  p(9,21,4,3,PANT);
+
+  // SOCKS
+  p(4,24,4,1,SOCK);
+  p(9,24,4,1,SOCK);
+
+  // SHOES
+  pr(3,25,5,2,SHOE,3);
+  pr(9,25,5,2,SHOE,3);
+  p(3,26,6,1,'#5A3820');
+  p(9,26,6,1,'#5A3820');
+
+  // CLASS OVERLAYS
+  if(d==='atk')drawKnight(ctx,ox,oy,P,lv);
+  else if(d==='def')drawShield(ctx,ox,oy,P,lv);
+  else if(d==='hp')drawMuscle(ctx,ox,oy,P,lv);
+  else if(d==='mag')drawWizard(ctx,ox,oy,P,lv);
+}
+
+function drawKnight(ctx,ox,oy,P,lv){
+  const p=(x,y,w,h,c)=>{ctx.fillStyle=c;ctx.fillRect(ox+x*P,oy+y*P,w*P,h*P);};
+  const pr=(x,y,w,h,c,r=2)=>{ctx.fillStyle=c;ctx.beginPath();ctx.roundRect(ox+x*P,oy+y*P,w*P,h*P,r);ctx.fill();};
+  const BL=lv>=2?'#FFD700':'#DCDCDC';
+  pr(18,8,2,10,BL,2);       // sword blade
+  p(16,13,6,1,'#FFD700');  // crossguard
+  pr(18,18,2,2,'#8B4513',2); // hilt
+  if(lv>=3){pr(3,-3,11,3,'#888',4);pr(5,-2,7,2,'#DDD',3);} // helmet
+  if(lv>=4){pr(4,14,9,5,'#CCC',3);p(6,15,5,1,'#FFD70055');} // plate
+  if(lv>=5){ctx.shadowColor='#FFD700';ctx.shadowBlur=18;pr(18,8,2,10,'#FFE566',2);ctx.shadowBlur=0;}
+}
+function drawShield(ctx,ox,oy,P,lv){
+  const pr=(x,y,w,h,c,r=2)=>{ctx.fillStyle=c;ctx.beginPath();ctx.roundRect(ox+x*P,oy+y*P,w*P,h*P,r);ctx.fill();};
+  const p=(x,y,w,h,c)=>{ctx.fillStyle=c;ctx.fillRect(ox+x*P,oy+y*P,w*P,h*P);};
+  const SC=lv>=2?'#FFD700':'#5577FF';
+  pr(-5,11,5,8,SC,4);pr(-4,12,3,6,'#4488FF',3);
+  p(-3,14,3,1,'#225599');
+  if(lv>=3){pr(4,14,9,5,'#7799CC',3);}
+  if(lv>=5){ctx.shadowColor='#4488FF';ctx.shadowBlur=15;pr(-5,11,5,8,'#88CCFF',4);ctx.shadowBlur=0;}
+}
+function drawMuscle(ctx,ox,oy,P,lv){
+  const pr=(x,y,w,h,c,r=2)=>{ctx.fillStyle=c;ctx.beginPath();ctx.roundRect(ox+x*P,oy+y*P,w*P,h*P,r);ctx.fill();};
+  const e=lv;
+  pr(-e,13,3+e,5,'#FF8844',4);pr(13,13,3+e,5,'#FF8844',4);
+  if(lv>=3){pr(3,-1,11,1,'#FF4444',3);}
+  if(lv>=5){ctx.shadowColor='#FF4400';ctx.shadowBlur=18;pr(-e,13,3+e,5,'#FFAA66',4);ctx.shadowBlur=0;}
+}
+function drawWizard(ctx,ox,oy,P,lv){
+  const p=(x,y,w,h,c)=>{ctx.fillStyle=c;ctx.fillRect(ox+x*P,oy+y*P,w*P,h*P);};
+  const pr=(x,y,w,h,c,r=2)=>{ctx.fillStyle=c;ctx.beginPath();ctx.roundRect(ox+x*P,oy+y*P,w*P,h*P,r);ctx.fill();};
+  if(lv>=1){pr(4,-5,9,1,'#AA66FF',4);pr(5,-8,7,3,'#7733CC',4);pr(6,-10,5,2,'#551199',4);pr(7,-11,3,2,'#440088',4);p(8,-11,1,1,'#FFD700');}
+  if(lv>=2){pr(18,7,2,14,'#885522',2);pr(16,5,6,4,'#CC44FF',4);pr(17,6,4,2,'#FFFFFF44',2);}
+  if(lv>=5){ctx.shadowColor='#CC44FF';ctx.shadowBlur=20;pr(16,5,6,4,'#FF88FF',4);ctx.shadowBlur=0;}
+}
+
+// ─── MONSTER RENDERER ────────────────────────────
+function drawBattle(canvas,pA,mA,monster,done,won,mDie,pFlee){
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  const g=ctx.createLinearGradient(0,0,0,canvas.height);
+  g.addColorStop(0,'#D0E8FF');g.addColorStop(1,'#F0D8FF');
+  ctx.fillStyle=g;ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle='#C8B4E8';ctx.fillRect(0,canvas.height-36,canvas.width,36);
+  // player — flee: slide left off screen, bob
+  const tmp=document.createElement('canvas');tmp.width=160;tmp.height=210;
+  // 이미지 캐시 있으면 이미지 사용, 없으면 픽셀
+  const d=dom(), lv=d==='base'?0:slv();
+  const entry=CHAR_CLASSES.find(cl=>cl.stat===d&&cl.lv===lv)||CHAR_CLASSES.find(cl=>cl.stat==='base');
+  const cachedImg=entry?_imgCache[entry.img]:null;
+  if(cachedImg){
+    const tCtx=tmp.getContext('2d');
+    const sc2=Math.min(160/cachedImg.naturalWidth,210/cachedImg.naturalHeight);
+    const iw=cachedImg.naturalWidth*sc2,ih=cachedImg.naturalHeight*sc2;
+    tCtx.drawImage(cachedImg,(160-iw)/2,(210-ih)/2,iw,ih);
+  } else {
+    drawChar(tmp,0);
+  }
+  const sc=0.55;
+  const groundY=28;
+  // 캐릭터: 캔버스 1/4 위치 중앙
+  const charW=160*sc, charH=210*sc;
+  const charCenterX=canvas.width*(1/4);
+  const fleeX = pFlee>0 ? charCenterX - charW/2 - pFlee*20 : charCenterX - charW/2 + Math.sin(pA*.25)*4;
+  const fleeY = pFlee>0 ? canvas.height-charH-groundY + Math.abs(Math.sin(pFlee*.8))*8 : canvas.height-charH-groundY;
+  if(pFlee>0){
+    ctx.save();ctx.scale(-1,1);
+    ctx.drawImage(tmp,-(fleeX+160*sc),fleeY,160*sc,210*sc);
+    ctx.restore();
+  } else {
+    ctx.drawImage(tmp,fleeX,fleeY,160*sc,210*sc);
+  }
+  // monster — 캔버스 2/3 위치 중앙 (스프라이트 80px 기준)
+  const mx=Math.round(canvas.width*(3/4))-40+Math.sin(mA*.3)*5;
+  const my=canvas.height-120-groundY;
+  drawMonster(ctx,mx,my,monster,mDie);
+  if(pA>5&&pA<20&&pFlee===0){ctx.fillStyle='#FFFF0033';ctx.fillRect(mx-10,my,90,90);}
+  if(done){
+    if(won){
+      ctx.fillStyle='#FFD74044';ctx.fillRect(0,0,canvas.width,canvas.height);
+      ctx.shadowColor='#FF8C00';ctx.shadowBlur=12;ctx.fillStyle='#FF6600';
+      ctx.font="bold 14px 'Press Start 2P'";ctx.textAlign='center';
+      ctx.fillText('VICTORY!',canvas.width/2,canvas.height/2);
+      ctx.shadowBlur=0;ctx.textAlign='left';
+    } else if(pFlee>=7){
+      ctx.fillStyle='#FF446622';ctx.fillRect(0,0,canvas.width,canvas.height);
+      ctx.fillStyle='#CC2244';ctx.font="bold 11px 'Press Start 2P'";
+      ctx.textAlign='center';ctx.fillText('도망쳤다...💨',canvas.width/2,canvas.height/2);
+      ctx.textAlign='left';
+    }
+  }
+}
+function drawMonster(ctx,ox,oy,mon,dying){
+  if(!mon)return;
+  const P=5;
+  const pal=[
+    {b:'#55DD44',dk:'#338822',e:'#FF2222'},
+    {b:'#CC7733',dk:'#995522',e:'#FFCC00'},
+    {b:'#CCCCCC',dk:'#999999',e:'#FF5555'},
+    {b:'#CC55CC',dk:'#993399',e:'#FFFF00'},
+    {b:'#DD3333',dk:'#991111',e:'#FF8800'},
+  ];
+  const c=pal[Math.min(mon.ti||0,4)];
+  const sy=dying?Math.max(0.05,1-dying/20):1;
+  const p=(x,y,w,h,col)=>{ctx.fillStyle=col;ctx.fillRect(ox+x*P,oy+y*P*sy,w*P,h*P*sy);};
+  p(0,0,16,14,c.b);p(1,1,14,12,c.b);
+  p(2,-2,3,2,c.dk);p(11,-2,3,2,c.dk); // horns
+  p(2,2,4,4,'#FFF');p(10,2,4,4,'#FFF');
+  p(3,3,2,2,c.e);p(11,3,2,2,c.e);
+  p(3,3,1,1,'#FFF');p(11,3,1,1,'#FFF'); // shine
+  p(4,9,8,3,c.dk);p(4,9,2,1,'#FFF');p(8,9,2,1,'#FFF'); // mouth+teeth
+  p(-2,3,2,5,c.b);p(16,3,2,5,c.b); // arms
+  p(3,14,4,3,c.dk);p(9,14,4,3,c.dk); // legs
+  if(mon.level>3)p(5,-3,6,1,'#FFD700'); // crown
+}
+
+// ─── STAMPS ──────────────────────────────────────
+// ─── STAMP HELPERS ───────────────────────────────
+function getStamp(id){return G.customStamps.find(s=>s.id===id)||null;}
+function statLabel(stat){return{atk:'⚔️+1',def:'🛡️+1',hp:'❤️+1',mag:'✨+1',rand:'🎲 랜덤'}[stat]||'';}
+function getTodaySchedule(){
+  const dow=G.currentDate.getDay();
+  if(dow>=1&&dow<=5)return(G.weekSchedule[dow]||[]).filter(id=>getStamp(id));
+  return[];
+}
+function renderStampBtns(){
+  const area=document.getElementById('stampBtns');
+  const lbl=document.getElementById('stampDayLbl');
+  if(!area)return;
+  const sched=getTodaySchedule();
+  // 스케쥴 순서 유지: sched ID 순서대로 stamp 객체 매핑
+  const show=sched.length>0
+    ? sched.map(id=>getStamp(id)).filter(Boolean)
+    : G.customStamps;
+  const dow=G.currentDate.getDay();
+  const dowName=['일','월','화','수','목','금','토'][dow];
+  if(sched.length>0){
+    lbl.textContent=`✦ ${dowName}요일 공부 도장 ✦`;
+    lbl.style.color='var(--gold)';
+  } else {
+    lbl.textContent='✦ 오늘의 공부 도장 ✦';
+    lbl.style.color='var(--text2)';
+  }
+  area.innerHTML=show.map(s=>`
+    <button class="sbtn" style="border-color:${s.color}" onclick="doStamp('${s.id}')">
+      <span class="si">${s.icon}</span>
+      <span class="sn">${s.name}</span>
+      <span class="sb" style="color:${s.color}">${statLabel(s.stat)}</span>
+    </button>`).join('');
+}
+
+function doStamp(id){
+  // 확인 팝업 먼저 표시
+  const s=getStamp(id);if(!s)return;
+  document.getElementById('stampConfirmIcon').textContent=s.icon;
+  document.getElementById('stampConfirmName').textContent=s.name+' 도장 찍기';
+  document.getElementById('stampConfirmEffect').textContent=statLabel(s.stat);
+  const okBtn=document.getElementById('stampConfirmOk');
+  okBtn.onclick=()=>{ document.getElementById('stampConfirmModal').style.display='none'; execStamp(id); };
+  document.getElementById('stampConfirmModal').style.display='flex';
+}
+function execStamp(id){
+  const s=getStamp(id);if(!s)return;
+  const key=dk(G.currentDate);
+  if(!G.stamps[key])G.stamps[key]=[];
+  G.stamps[key].push(id);
+  if(s.stat==='rand'){
+    const pick=['atk','def','hp','mag'][Math.floor(Math.random()*4)];
+    G.stats[pick]++;
+    showNotif(`${s.icon} ${s.name} 도장!\n랜덤: ${statLabel(pick)}`);
+    showGain([pick]);
+  }else{
+    G.stats[s.stat]++;
+    showNotif(`${s.icon} ${s.name} 도장!\n${statLabel(s.stat)}`);
+    showGain([s.stat]);
+  }
+  save();renderAll();
+  setTimeout(()=>{gotoScreen('stamps');renderCal();},350);
+}
+function showGain(stats){
+  const ic={atk:'⚔️+1',def:'🛡️+1',hp:'❤️+1',mag:'✨+1'};
+  const cl={atk:'#ff5555',def:'#55aaff',hp:'#55dd66',mag:'#dd55ff'};
+  stats.forEach((s,i)=>{
+    const e=document.createElement('div');e.className='sgain';e.textContent=ic[s];
+    e.style.cssText=`left:${40+i*18}%;top:50%;color:${cl[s]};font-family:'Press Start 2P',monospace;`;
+    document.body.appendChild(e);setTimeout(()=>e.remove(),1600);
+  });
+}
+
+// ─── MONSTER POWER CALC ───────────────────────────
+// 기본: 하루 3번 스탬프 기준이면 이김 (× 0.92)
+// 패배 너프: 하루 1번만 해도 이김 (1회 한정)
+function calcMonsterPower(daysUntil){
+  const pp=totPow();
+  if(G.monsterNerfed){
+    return Math.floor((pp + daysUntil*1)*0.92);
+  } else {
+    return Math.floor((pp + daysUntil*3)*0.92);
+  }
+}
+
+// ─── MONSTER DATE UTILS ───────────────────────────
+// 오늘로부터 n일 후 날짜를 YYYY-MM-DD로 반환
+function addDays(date, n){
+  const d=new Date(date);d.setDate(d.getDate()+n);return dk(d);
+}
+// 두 날짜 문자열의 차이(일수) 반환. 양수 = target이 미래
+function dateDiff(targetStr, fromStr){
+  const t=new Date(targetStr),f=new Date(fromStr);
+  return Math.round((t-f)/(1000*60*60*24));
+}
+// 오늘 날짜 기준 1~3일 후 nextMonsterDate 생성
+function newMonsterDate(fromDate){
+  return addDays(fromDate, 1+Math.floor(Math.random()*3));
+}
+
+// ─── SEASON RESET (매월 1일) ──────────────────────
+function doSeasonReset(){
+  const prevSeason=G.season||1;
+  G.stats={atk:10,def:10,hp:10,mag:10};
+  G.bones=0;
+  G.purchases=[];
+  G.dayCount=1;
+  G.seasonStartDate=dk(G.currentDate); // 시즌 시작일 기록
+  G.battles=[];
+  G.nextMonsterDate=newMonsterDate(G.currentDate); // 실제 날짜 기반
+  G.battlePending=false;
+  G.pendingMonster=null;
+  G.syncMode=false;
+  G.defeatCount=0;
+  G.monsterNerfed=false;
+  G.season=(prevSeason||1)+1;
+  calY=G.currentDate.getFullYear();
+  calM=G.currentDate.getMonth();
+  save();renderAll();
+  showNotif(`🌸 새 시즌 ${G.season} 시작!\n능력치가 초기화됐어요`);
+}
+
+// ─── DAYS ─────────────────────────────────────────
+function advDay(){
+  const d=new Date(G.currentDate);d.setDate(d.getDate()+1);G.currentDate=d;G.dayCount++;
+  calY=d.getFullYear();calM=d.getMonth();
+
+  // 매월 1일 → 시즌 초기화
+  if(d.getDate()===1){
+    doSeasonReset();
+    return;
+  }
+  checkMonsterSpawn();
+  save();renderAll();
+}
+
+// 실제 날짜 기반 몬스터 등장 체크 (앱 시작 시 + 날짜 변경 시 호출)
+function checkMonsterSpawn(){
+  if(G.battlePending)return;
+  const todayStr=dk(G.currentDate);
+
+  // 소급 처리 먼저 실행
+  const catchUp=processCatchUpBattles();
+  if(catchUp.count>0){
+    renderAll();
+    showCatchUpResult(catchUp);
+    return;
+  }
+
+  // 오늘 몬스터 등장 체크
+  if(!G.nextMonsterDate||todayStr>=G.nextMonsterDate){
+    const mIdx=Math.floor(Math.random()*MONSTERS.length);
+    const m=MONSTERS[mIdx];
+    const daysUntil=Math.max(1, dateDiff(todayStr, G.nextMonsterDate||todayStr)+1);
+    const lv=Math.min(5,Math.floor(totStamps()/18)+1||1);
+    const power=calcMonsterPower(daysUntil);
+    G.pendingMonster={...m,mIdx,level:lv,power};
+    G.battlePending=true;
+    setTimeout(startBattle,700);
+  }
+}
+
+// ─── CATCH-UP BATTLE PROCESSOR ────────────────────
+// 오랜만에 접속했을 때 지난 전투를 일괄 소급 처리
+function processCatchUpBattles(){
+  const todayStr=dk(G.currentDate);
+  let count=0, bonesEarned=0, wins=0, losses=0;
+  const results=[];
+
+  // 오늘보다 이전 날짜에 몬스터 등장 예정인 경우 루프
+  while(G.nextMonsterDate && G.nextMonsterDate < todayStr && !G.battlePending){
+    const battleDateStr=G.nextMonsterDate;
+    const battleDate=new Date(battleDateStr);
+
+    // 시즌 경계 체크: 배틀 날짜가 다음달 1일 이후면 시즌 리셋 먼저
+    const today=G.currentDate;
+    if(battleDate.getMonth()!==today.getMonth()||battleDate.getFullYear()!==today.getFullYear()){
+      // 시즌 경계 넘음 → 조용히 시즌 리셋
+      const prevSeason=G.season||1;
+      G.stats={atk:10,def:10,hp:10,mag:10};
+      G.bones=G.bones; // 뼈는 유지 (이미 소급 보상 받는 중)
+      G.dayCount=1;
+      G.battles=G.battles||[];
+      G.syncMode=false;G.defeatCount=0;G.monsterNerfed=false;
+      G.season=prevSeason+1;
+      G.nextMonsterDate=newMonsterDate(battleDate);
+      results.push({date:battleDateStr, type:'season_reset', season:G.season});
+      continue;
+    }
+
+    // 전투 시뮬레이션 (현재 능력치 기준)
+    const mIdx=Math.floor(Math.random()*MONSTERS.length);
+    const m=MONSTERS[mIdx];
+    const daysUntil=Math.max(1, dateDiff(battleDateStr, G.nextMonsterDate)+1||1);
+    const lv=Math.min(5,Math.floor(totStamps()/18)+1||1);
+    const power=calcMonsterPower(daysUntil);
+    const pp=totPow();
+    const lk=0.85+Math.random()*.3;
+    const ep=Math.floor(pp*lk);
+    const won=ep>=power;
+
+    const bonesGained=won?3:1;
+    G.bones+=bonesGained;
+    bonesEarned+=bonesGained;
+    if(won){wins++;G.monsterNerfed=false;G.syncMode=false;}
+    else{losses++;G.monsterNerfed=!G.monsterNerfed?true:false;G.syncMode=true;}
+
+    // 전투 기록 저장 (다시보기용 포함)
+    G.battles.push({
+      day:G.dayCount, date:battleDateStr,
+      monster:m.name, won,
+      replay:{mon:{...m,level:lv,power},stats:{...G.stats},pp,ep,bWon:won}
+    });
+
+    G.nextMonsterDate=newMonsterDate(battleDate);
+    count++;
+    results.push({date:battleDateStr, name:m.name, won, bones:bonesGained});
+  }
+
+  if(count>0){
+    save();
+  }
+  return {count, bonesEarned, wins, losses, results};
+}
+
+function showCatchUpResult(catchUp){
+  if(catchUp.count===0)return;
+
+  // 요약 팝업 생성
+  const overlay=document.createElement('div');
+  overlay.style.cssText='position:fixed;inset:0;background:#00000066;display:flex;align-items:center;justify-content:center;z-index:200;';
+
+  const lines=catchUp.results.map(r=>{
+    if(r.type==='season_reset') return `<div style="color:#FF85C2;font-size:9px;margin:3px 0;">🌸 시즌 ${r.season} 시작</div>`;
+    return `<div style="color:${r.won?'#FF8C00':'#DD2244'};font-size:9px;margin:3px 0;">${r.won?'✨':'😱'} ${r.date} ${r.name} ${r.won?'승리':'패배'} 🦴+${r.bones}</div>`;
+  }).join('');
+
+  overlay.innerHTML=`
+    <div style="background:#FFF;border:4px solid #FFD740;border-radius:16px;padding:18px;width:88%;max-width:380px;font-family:'Press Start 2P',monospace;text-align:center;">
+      <div style="font-size:13px;color:#FF6600;margin-bottom:12px;">📋 소급 정산 완료!</div>
+      <div style="font-size:10px;color:#AA6600;margin-bottom:10px;">자리 비운 사이 ${catchUp.count}번의 전투가 있었어요</div>
+      <div style="background:#FFF8F0;border:2px solid #FFD870;border-radius:8px;padding:10px;margin-bottom:12px;text-align:left;max-height:150px;overflow-y:auto;">
+        ${lines}
+      </div>
+      <div style="font-size:12px;color:#FF8C00;margin-bottom:14px;">
+        ${catchUp.wins}승 ${catchUp.losses}패 &nbsp;|&nbsp; 🦴 ${catchUp.bonesEarned}개 획득
+      </div>
+      <button onclick="this.closest('div[style*=fixed]').remove()" style="
+        background:linear-gradient(135deg,#FFE060,#FFA530);border:2px solid #FF8C00;
+        color:#3D2060;font-family:'Press Start 2P',monospace;font-size:11px;
+        padding:10px 24px;border-radius:8px;cursor:pointer;">확인</button>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+
+// ─── BATTLE REPLAY ────────────────────────────────
+function replayLastBattle(){
+  const todayStr=dk(G.currentDate);
+  const rec=[...G.battles].reverse().find(b=>b.date===todayStr&&b.replay);
+  if(!rec)return;
+  const r=rec.replay;
+
+  document.getElementById('battle-ov').classList.add('show');
+  const logEl=document.getElementById('bLog'),confBtn=document.getElementById('bConfBtn');
+  logEl.innerHTML='';confBtn.style.display='none';
+  let bDoneR=false,mDieTR=0,pFleeTR=0;
+  const bWonR=r.bWon;
+
+  document.getElementById('monEmoji').textContent=r.mon.emoji||'👾';
+  document.getElementById('monName').textContent=r.mon.name;
+  document.getElementById('monDesc').textContent=r.mon.desc||'';
+
+  const canvas=document.getElementById('bCanvas');
+  let pA=0,mA=0,phase=0;
+  if(battleAnimId){cancelAnimationFrame(battleAnimId);battleAnimId=null;}
+  function bLoop(){
+    if(phase===0){pA+=.06;mA+=.05;}
+    else if(phase===1){pA+=.4;mA+=.5;}
+    else if(bWonR){mDieTR=Math.min(mDieTR+.6,22);}
+    else{pFleeTR=Math.min(pFleeTR+.18,10);}
+    drawBattle(canvas,pA,mA,r.mon,bDoneR,bWonR,mDieTR,pFleeTR);
+    battleAnimId=requestAnimationFrame(bLoop);
+  }
+  battleAnimId=requestAnimationFrame(bLoop);
+
+  const logs=[
+    {d:300, m:`${r.mon.emoji} ${r.mon.name}(Lv.${r.mon.level})이 나타났다!`,c:'info'},
+    {d:900, m:`⚔️${r.stats.atk} 🛡️${r.stats.def} ❤️${r.stats.hp} ✨${r.stats.mag}`,c:'info'},
+    {d:1500,m:`💪 내 전투력: ${r.pp}  (유효: ${r.ep})`,c:'info'},
+    {d:2100,m:`👹 몬스터 전투력: ${r.mon.power}`,c:'info'},
+    {d:2800,m:bWonR?`✨ 승리! ${r.mon.name}을 물리쳤다!`:`😱 너무 강해... 도망친다!`,c:bWonR?'win':'lose'},
+    {d:3400,m:'📼 다시보기 — 보상 없음',c:'info'},
+  ];
+  logs.forEach(({d,m,c},i)=>{
+    setTimeout(()=>{
+      const s=document.createElement('span');s.className='bl '+c;s.textContent=m;
+      logEl.appendChild(s);logEl.scrollTop=logEl.scrollHeight;
+      if(i===1)phase=1;
+      if(i===logs.length-2){bDoneR=true;phase=2;}
+      if(i===logs.length-1)setTimeout(()=>confBtn.style.display='inline-block',500);
+    },d);
+  });
+}
+let bDone=false,bWon=false,mDieT=0,pFleeT=0;
+function startBattle(){
+  if(!G.pendingMonster)return;
+  document.getElementById('battle-ov').classList.add('show');
+  const logEl=document.getElementById('bLog'),confBtn=document.getElementById('bConfBtn');
+  logEl.innerHTML='';confBtn.style.display='none';bDone=false;bWon=false;mDieT=0;pFleeT=0;
+  const mon=G.pendingMonster,pp=totPow(),lk=0.85+Math.random()*.3,ep=Math.floor(pp*lk);
+  bWon=ep>=mon.power;
+
+  // Render monster profile card
+  document.getElementById('monEmoji').textContent=mon.emoji||'👾';
+  document.getElementById('monName').textContent=mon.name;
+  document.getElementById('monDesc').textContent=mon.desc||'';
+
+  const canvas=document.getElementById('bCanvas');
+  let pA=0,mA=0,phase=0;
+  function bLoop(){
+    if(phase===0){pA+=.06;mA+=.05;}
+    else if(phase===1){pA+=.4;mA+=.5;}
+    else if(bWon){mDieT=Math.min(mDieT+.6,22);}
+    else{pFleeT=Math.min(pFleeT+.18,10);}  // flee slide
+    drawBattle(canvas,pA,mA,mon,bDone,bWon,mDieT,pFleeT);
+    battleAnimId=requestAnimationFrame(bLoop);
+  }
+  battleAnimId=requestAnimationFrame(bLoop);
+  const logs=[
+    {d:300, m:`${mon.emoji} ${mon.name}(Lv.${mon.level})이 나타났다!`,c:'info'},
+    {d:900, m:`⚔️${G.stats.atk} 🛡️${G.stats.def} ❤️${G.stats.hp} ✨${G.stats.mag}`,c:'info'},
+    {d:1500,m:`💪 내 전투력: ${pp}  (유효: ${ep})`,c:'info'},
+    {d:2100,m:`👹 몬스터 전투력: ${mon.power}`,c:'info'},
+    {d:2800,m:bWon?`✨ 승리! ${mon.name}을 물리쳤다!`:`😱 너무 강해... 도망친다!`,c:bWon?'win':'lose'},
+    {d:3400,m:bWon?'🦴 뼛조각 3개 획득!':'🦴 뼛조각 1개... 다음엔 이기자!',c:bWon?'win':'lose'},
+  ];
+  logs.forEach(({d,m,c},i)=>{
+    setTimeout(()=>{
+      const s=document.createElement('span');s.className='bl '+c;s.textContent=m;
+      logEl.appendChild(s);logEl.scrollTop=logEl.scrollHeight;
+      if(i===1)phase=1;
+      if(i===logs.length-2){
+        bDone=true;phase=2;
+        if(bWon){
+          G.bones+=3;  // 승리: 3개
+          G.syncMode=false;
+        } else {
+          G.bones+=1;  // 패배(후퇴)해도 1개
+          G.syncMode=true;
+          G.defeatCount=(G.defeatCount||0)+1;
+        }
+        // 너프는 1회 적용 후 무조건 해제 (패배 후 다음 전투부터 정상)
+        const wasNerfed=G.monsterNerfed;
+        G.monsterNerfed=!bWon&&!wasNerfed; // 이번에 진 경우만 다음 1회 너프
+        G.nextMonsterDate=newMonsterDate(G.currentDate);
+        G.battlePending=false;G.pendingMonster=null;
+        G.battles.push({
+          day:G.dayCount, date:dk(G.currentDate),
+          monster:mon.name, won:bWon,
+          // 재현용 전체 데이터
+          replay:{
+            mon:{...mon},
+            stats:{...G.stats},
+            pp, ep,
+            bWon,
+          }
+        });
+        save();renderAll();
+      }
+      if(i===logs.length-1)setTimeout(()=>confBtn.style.display='inline-block',500);
+    },d);
+  });
+}
+function closeBattle(){if(battleAnimId){cancelAnimationFrame(battleAnimId);battleAnimId=null;}document.getElementById('battle-ov').classList.remove('show');renderAll();}
+function backDay(){if(G.dayCount<=1){showNotif('이미 첫째 날!');return;}const d=new Date(G.currentDate);d.setDate(d.getDate()-1);G.currentDate=d;G.dayCount--;calY=d.getFullYear();calM=d.getMonth();save();renderAll();}
+function addBones(n){G.bones+=n;save();renderAll();showNotif(`🦴 뼛조각 ${n}개 추가!`);}
+function resetGame(){
+  document.getElementById('resetConfirmModal').style.display='flex';
+}
+function doResetGame(){
+  document.getElementById('resetConfirmModal').style.display='none';
+  const chk=id=>document.getElementById(id)?.checked;
+  if(chk('rst-stats'))    G.stats={atk:10,def:10,hp:10,mag:10};
+  if(chk('rst-stamps'))   G.stamps={};
+  if(chk('rst-bones'))  { G.bones=0; G.purchases=[]; }
+  if(chk('rst-schedule')){ G.customStamps=JSON.parse(JSON.stringify(DEFAULT_STAMPS)); G.weekSchedule={1:[],2:[],3:[],4:[],5:[]}; }
+  if(chk('rst-shop'))     G.customShopItems=JSON.parse(JSON.stringify(DEFAULT_SHOP_ITEMS));
+  if(chk('rst-day'))    { G.dayCount=1; G.seasonStartDate=dk(G.currentDate); G.battles=[]; G.nextMonsterDate=newMonsterDate(G.currentDate); G.battlePending=false; G.pendingMonster=null; G.syncMode=false; G.defeatCount=0; G.monsterNerfed=false; }
+  localStorage.removeItem('sa5');
+  save(); renderAll();
+  showNotif('✅ 선택 항목 초기화 완료!');
+}
+
+// ─── SHOP ─────────────────────────────────────────
+function buyItem(id){
+  const it=G.customShopItems.find(i=>i.id===id);
+  if(!it)return;
+  if(G.bones<it.cost){showNotif(`🦴 부족! 필요 ${it.cost}개 / 보유 ${G.bones}개`);return;}
+  G.bones-=it.cost;
+  G.purchases.push({item:it.name,icon:it.icon,cost:it.cost,date:dk(G.currentDate)});
+  save();renderShop();renderTopBar();
+  showNotif(`${it.icon} ${it.name} 구매!\n-${it.cost}🦴`);
+}
+
+// ─── CALENDAR ─────────────────────────────────────
+let calSelectedKey=''; // 선택된 날짜 key
+
+function renderCal(){
+  document.getElementById('calTitle').textContent=fmt(calY,calM);
+  const first=new Date(calY,calM,1).getDay(),days=new Date(calY,calM+1,0).getDate(),todK=dk(G.currentDate);
+  // 선택 없으면 오늘로 기본값
+  if(!calSelectedKey) calSelectedKey=todK;
+  let html='';
+  for(let i=0;i<first;i++)html+='<div class="cal-day empty"></div>';
+  for(let d=1;d<=days;d++){
+    const k=`${calY}-${String(calM+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const stamps=G.stamps[k]||[],counts={};stamps.forEach(s=>counts[s]=(counts[s]||0)+1);
+    const hasStamps=stamps.length>0;
+    let dots='';Object.entries(counts).forEach(([t,n])=>{const s=getStamp(t);const col=s?s.color:'#AAA';for(let c=0;c<Math.min(n,4);c++)dots+=`<div class="sdot" style="background:${col}"></div>`;if(n>4)dots+=`<div class="sdot" style="background:${col}">+</div>`;});
+    const cls=[
+      'cal-day',
+      k===todK?'today':'',
+      k===calSelectedKey?'selected':'',
+      hasStamps?'has-stamps':'',
+    ].filter(Boolean).join(' ');
+    const click=hasStamps?`onclick="selectCalDay('${k}')"`:k===todK?`onclick="selectCalDay('${k}')"`:'' ;
+    html+=`<div class="${cls}" ${click}><div class="dn">${d}</div><div class="sdots">${dots}</div></div>`;
+  }
+  document.getElementById('calGrid').innerHTML=html;
+  renderDayPanel(calSelectedKey);
+}
+
+function selectCalDay(k){
+  calSelectedKey=k;
+  renderCal();
+}
+
+function goToToday(){
+  const now=G.currentDate;
+  calY=now.getFullYear();calM=now.getMonth();
+  calSelectedKey=dk(now);
+  renderCal();
+}
+
+function renderDayPanel(k){
+  const todK=dk(G.currentDate);
+  const isToday=k===todK;
+  const titleEl=document.getElementById('dayPanelTitle');
+  const listEl=document.getElementById('todayList');
+  if(!k){
+    titleEl.textContent='📌 오늘의 스탬프';
+    listEl.innerHTML='<span style="font-size:14px;color:var(--text2)">날짜를 선택해주세요</span>';
+    return;
+  }
+  // 날짜 표시 포맷
+  const [y,mo,d]=k.split('-');
+  const dateStr=`${y}.${mo}.${d}`;
+  if(isToday){
+    titleEl.innerHTML=`📌 오늘 (${dateStr})`;
+    titleEl.style.color='var(--gold)';
+  } else {
+    titleEl.innerHTML=`🔎 ${dateStr}`;
+    titleEl.style.color='#FF3388';
+  }
+  const ts=G.stamps[k]||[],tc={};ts.forEach(s=>tc[s]=(tc[s]||0)+1);
+  if(Object.keys(tc).length===0){
+    listEl.innerHTML='<span style="font-size:13px;color:var(--text2)">스탬프 없음</span>';
+    return;
+  }
+  listEl.innerHTML=Object.entries(tc).map(([t,n])=>{
+    const s=getStamp(t);if(!s)return'';
+    const statTxt=statLabel(s.stat);
+    return`<div class="today-item">
+      <div class="sdot" style="background:${s.color}"></div>
+      <span style="font-size:14px">${s.icon}</span>
+      <span style="font-size:13px">${s.name}</span>
+      <span class="today-cnt">×${n}</span>
+      <span style="font-size:10px;color:${s.color};margin-left:2px;">${statTxt}</span>
+    </div>`;
+  }).join('');
+}
+
+function calPrev(){calM--;if(calM<0){calM=11;calY--;}renderCal();}
+function calNext(){calM++;if(calM>11){calM=0;calY++;}renderCal();}
+
+// ─── SHOP RENDER ──────────────────────────────────
+let shopEditMode=false;
+let shopDragSrcIdx=null;
+let shopAddEditId=null; // null=추가, id=편집
+let shopSelIcon='🍗';
+
+function openShopEdit(){
+  // 개발자 비번 확인 후 편집 모드
+  document.getElementById('devPwInput').value='';
+  document.getElementById('devAuthErr').textContent='';
+  document.getElementById('devAuthModal').style.display='flex';
+  // 비번 확인 후 편집 모드로 전환하도록 콜백 설정
+  window._devAuthCallback=()=>{ shopEditMode=true; renderShop(); };
+  setTimeout(()=>document.getElementById('devPwInput').focus(),100);
+}
+
+function renderShop(){
+  document.getElementById('shopB').textContent=G.bones;
+  const sl=document.getElementById('shopList');
+
+  if(shopEditMode){
+    // 편집 모드 — draggable 제거, 핸들 touch로만 드래그
+    sl.innerHTML=G.customShopItems.map((it,i)=>`
+      <div class="shop-item" data-idx="${i}" id="si-${i}"
+        style="border:2px dashed #C8AAFF;background:#FAFAFF;position:relative;"
+        ondragover="shopDragOver(event,${i})"
+        ondrop="shopDrop(${i})">
+        <span class="shop-drag-handle" data-idx="${i}"
+          style="font-size:22px;color:#C8AAFF;padding:0 8px 0 2px;cursor:grab;touch-action:none;user-select:none;flex-shrink:0;"
+          onmousedown="shopHandleDown(event,${i})"
+          ontouchstart="shopHandleDown(event,${i})">⠿</span>
+        <span class="shop-ico" style="cursor:pointer;" onclick="openShopAddModal('${it.id}')">${it.icon}</span>
+        <div class="shop-info" style="cursor:pointer;" onclick="openShopAddModal('${it.id}')">
+          <div class="shop-nm">${it.name}</div>
+          <div class="shop-cost">🦴 ${it.cost}개</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex-shrink:0;">
+          <button onclick="shopCostChange('${it.id}',1)" style="background:#E8F8FF;border:1px solid #88CCFF;border-radius:5px;font-size:11px;padding:3px 8px;cursor:pointer;color:#2277EE;">▲</button>
+          <button onclick="shopCostChange('${it.id}',-1)" style="background:#FFE8E8;border:1px solid #FFAAAA;border-radius:5px;font-size:11px;padding:3px 8px;cursor:pointer;color:#CC2244;">▼</button>
+        </div>
+        <button onclick="shopConfirmDelete('${it.id}')" style="background:#FFE0E0;border:2px solid #FF9999;color:#CC3333;font-family:'Press Start 2P',monospace;font-size:14px;padding:7px 9px;border-radius:8px;cursor:pointer;margin-left:6px;flex-shrink:0;">🗑️</button>
+      </div>`).join('')+`
+      <div onclick="openShopAddModal(null)" style="
+        border:3px dashed #AADDCC;border-radius:12px;padding:14px;
+        text-align:center;cursor:pointer;color:#44AA77;
+        font-family:'Press Start 2P',monospace;font-size:11px;
+        background:#F5FFF8;margin-top:2px;">
+        ➕ 새 상품 추가
+      </div>
+      <button onclick="shopEditMode=false;renderShop();" style="
+        width:100%;margin-top:8px;background:linear-gradient(135deg,#FFE060,#FFA530);
+        border:2px solid #FF8C00;color:#3D2060;
+        font-family:'Press Start 2P',monospace;font-size:11px;
+        padding:10px;border-radius:10px;cursor:pointer;">✓ 편집 완료</button>`;
+    // 렌더 후 드래그 초기화
+    setTimeout(initShopTouchDrag, 0);
+  } else {
+    // 일반 모드
+    sl.innerHTML=G.customShopItems.map(it=>`
+      <div class="shop-item">
+        <span class="shop-ico">${it.icon}</span>
+        <div class="shop-info"><div class="shop-nm">${it.name}</div><div class="shop-cost">🦴 ${it.cost}개</div></div>
+        <button class="buy-btn" onclick="buyItem('${it.id}')" ${G.bones<it.cost?'disabled':''}>구매</button>
+      </div>`).join('');
+  }
+
+  const h=document.getElementById('purchHist');
+  h.innerHTML=G.purchases.length===0
+    ?'<span style="font-size:13px;color:var(--text2)">구매 내역 없음</span>'
+    :[...G.purchases].reverse().slice(0,8).map(p=>`<div class="hist-item">${p.icon} ${p.item} (-${p.cost}🦴) ${p.date}</div>`).join('');
+}
+
+// ─── SHOP TOUCH DRAG (핸들 전용, iOS 대응) ───────────
+let _shopGhost=null,_shopScrollRaf=null,_shopDragActive=false;
+
+function shopDragOver(e,i){e.preventDefault();}
+function shopDrop(i){} // touch 방식에서는 안 씀
+
+function shopHandleDown(e,idx){
+  e.preventDefault();e.stopPropagation();
+  _shopDragActive=true;
+  shopDragSrcIdx=idx;
+  const srcEl=document.getElementById('si-'+idx);
+  if(!srcEl)return;
+
+  // 고스트 생성
+  const ghost=srcEl.cloneNode(true);
+  ghost.id='shop-ghost';
+  ghost.style.cssText=`
+    position:fixed;z-index:999;opacity:.85;pointer-events:none;
+    width:${srcEl.offsetWidth}px;border-radius:12px;
+    border:2px solid #9944FF;background:#F5EEFF;
+    box-shadow:0 8px 24px #00000033;
+    transition:none;left:0;top:0;`;
+  document.body.appendChild(ghost);
+  _shopGhost=ghost;
+  srcEl.style.opacity='.3';
+
+  const getXY=ev=>ev.touches?{x:ev.touches[0].clientX,y:ev.touches[0].clientY}:{x:ev.clientX,y:ev.clientY};
+  const {x,y}=getXY(e);
+  const rect=srcEl.getBoundingClientRect();
+  const offX=x-rect.left,offY=y-rect.top;
+
+  function moveGhost(ev){
+    if(!_shopDragActive)return;
+    const {x:cx,y:cy}=getXY(ev);
+    ghost.style.left=(cx-offX)+'px';
+    ghost.style.top=(cy-offY)+'px';
+
+    // 드롭 대상 찾기
+    ghost.style.display='none';
+    const el=document.elementFromPoint(cx,cy);
+    ghost.style.display='';
+    const target=el?.closest('[id^="si-"]');
+    document.querySelectorAll('.shop-item').forEach(x=>{x.style.boxShadow='';x.style.borderColor='#C8AAFF';});
+    if(target&&target.id!=='si-'+shopDragSrcIdx){
+      target.style.boxShadow='0 0 0 3px #9944FF66';
+      target.style.borderColor='#9944FF';
+    }
+
+    // 자동 스크롤
+    const sl=document.getElementById('shopList');
+    const slRect=sl.getBoundingClientRect();
+    const ZONE=60,SPEED=6;
+    cancelAnimationFrame(_shopScrollRaf);
+    if(cy<slRect.top+ZONE){
+      const scroll=()=>{sl.scrollTop-=SPEED;_shopScrollRaf=requestAnimationFrame(scroll);};
+      _shopScrollRaf=requestAnimationFrame(scroll);
+    }else if(cy>slRect.bottom-ZONE){
+      const scroll=()=>{sl.scrollTop+=SPEED;_shopScrollRaf=requestAnimationFrame(scroll);};
+      _shopScrollRaf=requestAnimationFrame(scroll);
+    }
+  }
+
+  function endDrag(ev){
+    if(!_shopDragActive)return;
+    _shopDragActive=false;
+    cancelAnimationFrame(_shopScrollRaf);
+    if(ghost.parentNode)ghost.remove();
+    _shopGhost=null;
+    document.removeEventListener('mousemove',moveGhost);
+    document.removeEventListener('touchmove',moveGhost);
+    document.removeEventListener('mouseup',endDrag);
+    document.removeEventListener('touchend',endDrag);
+
+    // 드롭 위치 확인
+    const {x:cx,y:cy}=ev.changedTouches?{x:ev.changedTouches[0].clientX,y:ev.changedTouches[0].clientY}:{x:ev.clientX,y:ev.clientY};
+    const el=document.elementFromPoint(cx,cy);
+    const target=el?.closest('[id^="si-"]');
+    document.querySelectorAll('.shop-item').forEach(x=>{x.style.opacity='1';x.style.boxShadow='';x.style.borderColor='#C8AAFF';});
+
+    if(target){
+      const toIdx=parseInt(target.dataset.idx);
+      if(!isNaN(toIdx)&&toIdx!==shopDragSrcIdx){
+        const arr=G.customShopItems;
+        const moved=arr.splice(shopDragSrcIdx,1)[0];
+        arr.splice(toIdx,0,moved);
+        save();
+      }
+    }
+    shopDragSrcIdx=null;
+    renderShop();
+  }
+
+  document.addEventListener('mousemove',moveGhost,{passive:false});
+  document.addEventListener('touchmove',moveGhost,{passive:false});
+  document.addEventListener('mouseup',endDrag);
+  document.addEventListener('touchend',endDrag);
+}
+
+function initShopTouchDrag(){
+  // 목록 자체 스크롤은 항상 허용 (touch-action 설정)
+  const sl=document.getElementById('shopList');
+  if(sl) sl.style.touchAction='pan-y';
+}
+
+// 개수(비용) 변경
+function shopCostChange(id,delta){
+  const it=G.customShopItems.find(i=>i.id===id);
+  if(!it)return;
+  it.cost=Math.max(1,it.cost+delta);
+  save();renderShop();
+}
+
+// 항목 삭제 확인
+let _shopDeleteId=null;
+function shopConfirmDelete(id){
+  _shopDeleteId=id;
+  const it=G.customShopItems.find(i=>i.id===id);
+  document.getElementById('shopDelName').textContent=it?`${it.icon} ${it.name}`:'이 상품';
+  document.getElementById('shopDelModal').style.display='flex';
+}
+function shopDeleteItem(id){
+  G.customShopItems=G.customShopItems.filter(i=>i.id!==id);
+  save();renderShop();
+}
+
+// 상품 추가/편집 모달
+function openShopAddModal(editId){
+  shopAddEditId=editId;
+  const modal=document.getElementById('shopAddModal');
+  const title=document.getElementById('shopAddTitle');
+  document.getElementById('shopAddErr').textContent='';
+
+  if(editId){
+    const it=G.customShopItems.find(i=>i.id===editId);
+    title.textContent='✏️ 상품 편집';
+    document.getElementById('shopAddName').value=it.name;
+    document.getElementById('shopAddCost').value=it.cost;
+    shopSelIcon=it.icon;
+  } else {
+    title.textContent='➕ 상품 추가';
+    document.getElementById('shopAddName').value='';
+    document.getElementById('shopAddCost').value='';
+    shopSelIcon='🍗';
+  }
+
+  // 아이콘 선택 UI 렌더
+  const picker=document.getElementById('shopIconPicker');
+  picker.innerHTML=SHOP_ICONS.map(ic=>`
+    <div onclick="shopSelIcon='${ic}';renderShopIconPicker();"
+      style="font-size:22px;cursor:pointer;padding:4px;border-radius:6px;border:2px solid ${ic===shopSelIcon?'#33CC66':'transparent'};transition:all .1s;" id="sico-${ic.codePointAt(0)}">${ic}</div>`).join('');
+
+  modal.style.display='flex';
+}
+function renderShopIconPicker(){
+  SHOP_ICONS.forEach(ic=>{
+    const el=document.getElementById('sico-'+ic.codePointAt(0));
+    if(el)el.style.borderColor=ic===shopSelIcon?'#33CC66':'transparent';
+  });
+}
+function closeShopAddModal(){document.getElementById('shopAddModal').style.display='none';}
+function confirmShopAdd(){
+  const name=document.getElementById('shopAddName').value.trim();
+  const costVal=parseInt(document.getElementById('shopAddCost').value);
+  const err=document.getElementById('shopAddErr');
+  if(!name){err.textContent='❌ 이름을 입력해줘!';return;}
+  if(!costVal||costVal<1){err.textContent='❌ 뼛조각 수를 입력해줘!';return;}
+  if(shopAddEditId){
+    const it=G.customShopItems.find(i=>i.id===shopAddEditId);
+    if(it){it.name=name;it.cost=costVal;it.icon=shopSelIcon;}
+  } else {
+    G.customShopItems.push({id:'s_'+Date.now(),name,icon:shopSelIcon,cost:costVal});
+  }
+  save();closeShopAddModal();renderShop();
+  showNotif(shopAddEditId?'✅ 수정됐어!':'✅ 추가됐어!');
+}
+
+// ─── RENDER FUNCTIONS ─────────────────────────────
+function renderTopBar(){
+  document.getElementById('tDate').textContent=fd(G.currentDate);
+  document.getElementById('tBones').textContent=G.bones;
+  const daysInMonth=new Date(G.currentDate.getFullYear(),G.currentDate.getMonth()+1,0).getDate();
+  const dayNum=calcDayCount();
+  G.dayCount=dayNum; // 항상 실제 날짜 기반으로 동기화
+  document.getElementById('tDay').textContent=`${dayNum}/${daysInMonth}`;
+  const seasonEl=document.getElementById('tSeason');
+  if(seasonEl) seasonEl.textContent=isMaxLevel()?`S${G.season||1} ⭐MAX`:`S${G.season||1}`;
+}
+function renderStats(){
+  const MAX_GAUGE=40; // 게이지 최대치 (10 기본 + 30 만렙 기준)
+  ['atk','def','hp','mag'].forEach(k=>{
+    const v=G.stats[k];
+    document.getElementById('v-'+k).textContent=v;
+    // 40이 넘어도 게이지는 100%에서 고정
+    document.getElementById('b-'+k).style.width=Math.min(100,((v-10)/(MAX_GAUGE-10))*100)+'%';
+  });
+  document.getElementById('iPower').textContent=totPow();
+  const cd=document.getElementById('iMonster');
+  if(G.battlePending){
+    cd.textContent='⚠️ 출현!';cd.style.color='#ff4444';
+  } else {
+    const days=Math.min(3, Math.max(0, G.nextMonsterDate ? dateDiff(G.nextMonsterDate, dk(G.currentDate)) : 1));
+    if(days===0){
+      // 오늘 등장일 → 출현 표시 + 전투 트리거
+      cd.textContent='⚠️ 출현!';cd.style.color='#ff4444';
+      setTimeout(()=>checkMonsterSpawn(),300);
+    } else {
+      cd.textContent=`약 ${days}일`;cd.style.color=days<=1?'#ff9955':'#aaaaff';
+    }
+  }
+  // 다시보기 버튼: 오늘 전투 기록이 있을 때만 표시
+  const replayBtn=document.getElementById('replayBtn');
+  if(replayBtn){
+    const todayStr=dk(G.currentDate);
+    const todayBattle=G.battles&&[...G.battles].reverse().find(b=>b.date===todayStr&&b.replay);
+    const show=!!todayBattle;
+    replayBtn.style.display=show?'block':'none';
+    // 버튼 있을 때 좌측 정렬, 없을 때 중앙 정렬
+    const card=document.getElementById('monsterCard');
+    const txt=document.getElementById('monsterCardText');
+    if(card) card.style.justifyContent=show?'space-between':'center';
+    if(txt) txt.style.textAlign=show?'left':'center';
+  }
+  const d=dom(), lv=d==='base'?0:slv();
+  const cl={atk:'#ff5555',def:'#55aaff',hp:'#55dd66',mag:'#dd55ff'};
+  const lbl=document.getElementById('cClass');
+  lbl.textContent=`✨ ${classLabel()} ✨`;
+  lbl.style.color=d==='base'?'var(--gold)':cl[d];
+  lbl.style.textShadow=`0 0 10px ${d==='base'?'var(--gold)':cl[d]}`;
+  document.getElementById('cLv').textContent=d==='base'?'입문':(`Lv.${lv}`);
+}
+function renderAll(){renderTopBar();renderStats();renderStampBtns();if(document.getElementById('s-stamps').classList.contains('active'))renderCal();if(document.getElementById('s-shop').classList.contains('active'))renderShop();if(document.getElementById('s-schedule').classList.contains('active'))renderSchedule();}
+
+// ─── BACKGROUND PARTICLE ANIMATION ───────────────
+let bgAnimId=null;
+const BG_PARTICLES=[];
+const BG_PALETTE=[
+  [255,182,193],[216,191,216],[173,216,230],
+  [255,218,185],[200,230,201],[255,255,180],
+];
+
+function initBgParticles(w,h){
+  BG_PARTICLES.length=0;
+  // 별/마름모 파티클 30개
+  for(let i=0;i<30;i++){
+    BG_PARTICLES.push({
+      x:Math.random()*w, y:Math.random()*h,
+      vx:(Math.random()-.5)*0.3,
+      vy:-(Math.random()*0.4+0.1),
+      size:Math.random()*3+1,
+      alpha:Math.random()*0.6+0.2,
+      alphaDir:Math.random()>.5?1:-1,
+      alphaSpd:Math.random()*0.008+0.003,
+      type:Math.floor(Math.random()*3), // 0=원, 1=별, 2=마름모
+      color:BG_PALETTE[Math.floor(Math.random()*BG_PALETTE.length)],
+      rot:Math.random()*Math.PI*2,
+      rotSpd:(Math.random()-.5)*0.02,
+    });
+  }
+  // 흐르는 라인 5개
+  for(let i=0;i<5;i++){
+    BG_PARTICLES.push({
+      x:Math.random()*w, y:Math.random()*h,
+      vx:(Math.random()-.5)*0.2,
+      vy:-(Math.random()*0.2+0.05),
+      len:Math.random()*30+15,
+      alpha:Math.random()*0.2+0.05,
+      alphaDir:1,alphaSpd:0.004,
+      type:3,
+      color:BG_PALETTE[Math.floor(Math.random()*BG_PALETTE.length)],
+      rot:Math.random()*Math.PI*2,
+    });
+  }
+}
+
+function drawStar(ctx,x,y,r,alpha){
+  ctx.beginPath();
+  for(let i=0;i<5;i++){
+    const a=i*Math.PI*2/5-Math.PI/2;
+    const b=a+Math.PI/5;
+    i===0?ctx.moveTo(x+r*Math.cos(a),y+r*Math.sin(a)):ctx.lineTo(x+r*Math.cos(a),y+r*Math.sin(a));
+    ctx.lineTo(x+r*.45*Math.cos(b),y+r*.45*Math.sin(b));
+  }
+  ctx.closePath();ctx.fill();
+}
+
+function startBgAnim(){
+  if(bgAnimId)cancelAnimationFrame(bgAnimId);
+  const c=document.getElementById('bgCanvas');
+  if(!c)return;
+  const zone=c.parentElement;
+  const resize=()=>{c.width=zone.offsetWidth;c.height=zone.offsetHeight;initBgParticles(c.width,c.height);};
+  resize();
+
+  const ctx=c.getContext('2d');
+  let t=0;
+
+  function loop(){
+    t+=0.012;
+    const w=c.width,h=c.height;
+    ctx.clearRect(0,0,w,h);
+
+    // 배경 그라디언트 (천천히 색상 이동)
+    const hue1=300+Math.sin(t)*20;
+    const hue2=220+Math.cos(t*.7)*20;
+    const bg=ctx.createLinearGradient(0,0,w,h);
+    bg.addColorStop(0,`hsla(${hue1},80%,96%,1)`);
+    bg.addColorStop(.5,`hsla(260,70%,95%,1)`);
+    bg.addColorStop(1,`hsla(${hue2},75%,96%,1)`);
+    ctx.fillStyle=bg;ctx.fillRect(0,0,w,h);
+
+    // 중앙 오라 글로우
+    const glow=ctx.createRadialGradient(w/2,h*.45,10,w/2,h*.45,h*.55);
+    glow.addColorStop(0,`hsla(${hue1},90%,85%,0.25)`);
+    glow.addColorStop(.5,`hsla(${hue2},80%,80%,0.12)`);
+    glow.addColorStop(1,'transparent');
+    ctx.fillStyle=glow;ctx.fillRect(0,0,w,h);
+
+    // 파티클 그리기
+    BG_PARTICLES.forEach(p=>{
+      // 이동
+      p.x+=p.vx;p.y+=p.vy;
+      if(p.x<-20)p.x=w+20;if(p.x>w+20)p.x=-20;
+      if(p.y<-20){p.y=h+20;p.x=Math.random()*w;}
+
+      // 알파 펄스
+      p.alpha+=p.alphaDir*p.alphaSpd;
+      if(p.alpha>0.75||p.alpha<0.05)p.alphaDir*=-1;
+
+      const [r,g,b]=p.color;
+      ctx.save();
+      ctx.translate(p.x,p.y);
+      if(p.rot!==undefined){p.rot+=p.rotSpd||0;ctx.rotate(p.rot);}
+
+      if(p.type===3){
+        // 흐르는 선
+        ctx.strokeStyle=`rgba(${r},${g},${b},${p.alpha})`;
+        ctx.lineWidth=1;
+        ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(p.vx*p.len/0.2,p.vy*p.len/0.1);ctx.stroke();
+      } else {
+        ctx.fillStyle=`rgba(${r},${g},${b},${p.alpha})`;
+        if(p.type===0){
+          // 원 + 반짝임
+          ctx.beginPath();ctx.arc(0,0,p.size,0,Math.PI*2);ctx.fill();
+          // 십자 반짝임
+          ctx.strokeStyle=`rgba(255,255,255,${p.alpha*.8})`;
+          ctx.lineWidth=.5;
+          ctx.beginPath();ctx.moveTo(-p.size*2,0);ctx.lineTo(p.size*2,0);ctx.stroke();
+          ctx.beginPath();ctx.moveTo(0,-p.size*2);ctx.lineTo(0,p.size*2);ctx.stroke();
+        } else if(p.type===1){
+          drawStar(ctx,0,0,p.size*1.8,p.alpha);
+        } else {
+          // 마름모
+          ctx.beginPath();ctx.moveTo(0,-p.size*1.4);ctx.lineTo(p.size,0);ctx.lineTo(0,p.size*1.4);ctx.lineTo(-p.size,0);ctx.closePath();ctx.fill();
+        }
+      }
+      ctx.restore();
+    });
+
+    bgAnimId=requestAnimationFrame(loop);
+  }
+  loop();
+}
+
+// ─── CHARACTER ANIMATION ──────────────────────────
+function resizeCharCanvas(){
+  const c=document.getElementById('charCanvas');
+  const zone=c?.parentElement?.parentElement; // charWrap → char-zone
+  if(!c||!zone)return;
+  // char-zone에서 char-info 높이 빼고 남은 높이를 캔버스에 할당
+  const info=zone.querySelector('.char-info');
+  const infoH=info?info.offsetHeight+10:40;
+  const avail=zone.offsetHeight-infoH-12;
+  const h=Math.max(120,Math.min(300,avail));
+  const w=Math.round(h*(220/260));
+  c.width=w;c.height=h;
+}
+
+function startAnim(){
+  if(animId)cancelAnimationFrame(animId);
+  resizeCharCanvas();
+  startBgAnim();
+  const c=document.getElementById('charCanvas');
+  let t=0;
+  let lastKey='';
+
+  function loop(){
+    t+=.035;
+    const d=dom(), lv=d==='base'?0:slv();
+    const key=d+'_'+lv;
+    const entry=CHAR_CLASSES.find(cl=>cl.stat===d&&cl.lv===lv)
+              ||CHAR_CLASSES.find(cl=>cl.stat==='base');
+    const imgSrc=entry?entry.img:'';
+
+    // 직업 변경 시 이미지 프리로드 트리거
+    if(key!==lastKey){
+      lastKey=key;
+      loadCharImg(imgSrc); // 백그라운드 프리로드
+    }
+
+    const cached=_imgCache[imgSrc];
+    if(cached){
+      // 이미지 캐시 있음 → 이미지로 그리기
+      const ctx=c.getContext('2d');
+      ctx.clearRect(0,0,c.width,c.height);
+      const bob=Math.sin(t)*4.5;
+      const scale=Math.min(c.width/cached.naturalWidth,c.height/cached.naturalHeight);
+      const w=cached.naturalWidth*scale,h=cached.naturalHeight*scale;
+      const x=(c.width-w)/2,y=(c.height-h)/2+bob;
+      ctx.drawImage(cached,x,y,w,h);
+    } else {
+      // 이미지 없거나 로딩 중 → 픽셀 캔버스
+      drawChar(c,Math.sin(t)*4.5);
+    }
+    animId=requestAnimationFrame(loop);
+  }
+  loop();
+}
+
+// ─── SCREEN NAV ───────────────────────────────────
+function gotoScreen(name){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  const target=document.getElementById('s-'+name);
+  if(target) target.classList.add('active');
+  ['main','stamps','shop','schedule'].forEach(n=>{
+    const btn=document.getElementById('nav-'+n);
+    if(btn) btn.classList.toggle('active',n===name);
+  });
+  // 탭 이동 시 개발자 메뉴 + 상점 편집 모드 숨기기
+  const devMenu=document.getElementById('devMenuPanel');
+  if(devMenu&&name!=='schedule') devMenu.style.display='none';
+  if(name!=='shop') shopEditMode=false;
+  if(name==='stamps')renderCal();
+  if(name==='shop')renderShop();
+  if(name==='main'){startAnim();renderStampBtns();}
+  if(name==='schedule')renderSchedule();
+  if(name!=='main'&&bgAnimId){cancelAnimationFrame(bgAnimId);bgAnimId=null;}
+}
+
+// ─── SCHEDULE / STAMP EDITOR ──────────────────────
+let editingStampId=null,selColor=STAMP_COLORS[0],selIcon=STAMP_ICONS[0],selStat='atk',selDow=1;
+
+function renderSchedule(){
+  const lib=document.getElementById('stampLibrary');
+  if(!lib)return;
+
+  // 칩 생성
+  lib.innerHTML=G.customStamps.map((s,i)=>`
+    <div class="slib-chip" style="border-color:${s.color}"
+         data-id="${s.id}" data-idx="${i}"
+         draggable="true">
+      <span class="sc-drag">⠿</span>
+      <span class="sc-ico">${s.icon}</span>
+      <span class="sc-nm">${s.name}</span>
+    </div>`).join('');
+
+  // 드래그 이벤트 바인딩
+  let dragSrc=null;
+  lib.querySelectorAll('.slib-chip').forEach(chip=>{
+    // 클릭 vs 드래그 구분: mousedown에서 dragstart 안 됐으면 클릭
+    chip.addEventListener('click',()=>{
+      if(!chip.classList.contains('dragging'))startEditStamp(chip.dataset.id);
+    });
+    chip.addEventListener('dragstart',e=>{
+      dragSrc=chip;
+      chip.classList.add('dragging');
+      e.dataTransfer.effectAllowed='move';
+      e.dataTransfer.setData('text/plain',chip.dataset.idx);
+    });
+    chip.addEventListener('dragend',()=>{
+      chip.classList.remove('dragging');
+      lib.querySelectorAll('.slib-chip').forEach(c=>c.classList.remove('drag-over'));
+      dragSrc=null;
+    });
+    chip.addEventListener('dragover',e=>{
+      e.preventDefault();e.dataTransfer.dropEffect='move';
+      if(chip!==dragSrc){
+        lib.querySelectorAll('.slib-chip').forEach(c=>c.classList.remove('drag-over'));
+        chip.classList.add('drag-over');
+      }
+    });
+    chip.addEventListener('drop',e=>{
+      e.preventDefault();
+      if(!dragSrc||dragSrc===chip)return;
+      const fromIdx=parseInt(dragSrc.dataset.idx);
+      const toIdx=parseInt(chip.dataset.idx);
+      // 배열 순서 변경
+      const moved=G.customStamps.splice(fromIdx,1)[0];
+      G.customStamps.splice(toIdx,0,moved);
+      save();renderSchedule();renderStampBtns();
+    });
+  });
+
+  renderDowSchedule();
+}
+
+function renderDowSchedule(){
+  const dow=selDow;
+  const assigned=G.weekSchedule[dow]||[];
+  const unassigned=G.customStamps.filter(s=>!assigned.includes(s.id));
+  let html='<div class="dow-slot">';
+  if(assigned.length===0)html+='<span style="font-size:9px;color:#AAA;font-family:\'Press Start 2P\',monospace">도장 없음</span>';
+  assigned.forEach(id=>{
+    const s=getStamp(id);if(!s)return;
+    html+=`<div class="dow-chip" style="border-color:${s.color}">
+      <span style="font-size:14px">${s.icon}</span>
+      <span style="font-family:'Press Start 2P',monospace;font-size:9px;color:#333">${s.name}</span>
+      <button class="dow-chip-del" onclick="removeDowStamp(${dow},'${id}')">✕</button>
+    </div>`;
+  });
+  html+='</div>';
+  if(unassigned.length>0){
+    html+='<div style="font-size:9px;color:#AA8833;font-family:\'Press Start 2P\',monospace;margin:4px 0">+ 추가할 도장:</div>';
+    html+='<div class="dow-add-row">';
+    unassigned.forEach(s=>{
+      html+=`<div class="dow-add-chip" style="border-color:${s.color}" onclick="addDowStamp(${dow},'${s.id}')">
+        <span style="font-size:13px">${s.icon}</span>
+        <span style="font-family:'Press Start 2P',monospace;font-size:9px;color:#333">${s.name}</span>
+      </div>`;
+    });
+    html+='</div>';
+  }
+  document.getElementById('dowSchedule').innerHTML=html;
+}
+
+function selectDow(dow,btn){
+  selDow=dow;
+  document.querySelectorAll('.dow-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderDowSchedule();
+}
+
+function addDowStamp(dow,id){
+  if(!G.weekSchedule[dow])G.weekSchedule[dow]=[];
+  if(!G.weekSchedule[dow].includes(id))G.weekSchedule[dow].push(id);
+  save();renderDowSchedule();renderStampBtns();
+}
+function removeDowStamp(dow,id){
+  G.weekSchedule[dow]=(G.weekSchedule[dow]||[]).filter(x=>x!==id);
+  save();renderDowSchedule();renderStampBtns();
+}
+
+function openEditor(isNew){
+  const ed=document.getElementById('stampEditor');
+  ed.style.display='block';
+  document.getElementById('seTtl').textContent=isNew?'✨ 도장 추가':'✏️ 도장 편집';
+  document.getElementById('seDelBtn').style.display=isNew?'none':'inline-block';
+  // Colors
+  document.getElementById('seColors').innerHTML=STAMP_COLORS.map((c,i)=>
+    `<div class="se-color-swatch${c===selColor?' selected':''}" style="background:${c}" onclick="pickColor('${c}',this)"></div>`).join('');
+  // Icons
+  document.getElementById('seIcons').innerHTML=STAMP_ICONS.map(ic=>
+    `<div class="se-icon-opt${ic===selIcon?' selected':''}" onclick="pickIcon('${ic}',this)">${ic}</div>`).join('');
+  // Stats
+  document.getElementById('seStats').innerHTML=STAT_OPTS.map(o=>
+    `<button class="se-stat-btn${o.k===selStat?' selected':''}" onclick="pickStat('${o.k}',this)">${o.label}</button>`).join('');
+}
+
+function startAddStamp(){
+  editingStampId=null;
+  selColor=STAMP_COLORS[0];selIcon=STAMP_ICONS[0];selStat='atk';
+  document.getElementById('seNameInput').value='';
+  openEditor(true);
+}
+function startEditStamp(id){
+  const s=getStamp(id);if(!s)return;
+  editingStampId=id;
+  selColor=s.color;selIcon=s.icon;selStat=s.stat;
+  document.getElementById('seNameInput').value=s.name;
+  openEditor(false);
+}
+function cancelStampEdit(){document.getElementById('stampEditor').style.display='none';editingStampId=null;}
+
+function pickColor(c,el){selColor=c;document.querySelectorAll('.se-color-swatch').forEach(e=>e.classList.remove('selected'));el.classList.add('selected');}
+function pickIcon(ic,el){selIcon=ic;document.querySelectorAll('.se-icon-opt').forEach(e=>e.classList.remove('selected'));el.classList.add('selected');}
+function pickStat(k,el){selStat=k;document.querySelectorAll('.se-stat-btn').forEach(e=>e.classList.remove('selected'));el.classList.add('selected');}
+
+function saveStampEdit(){
+  const name=document.getElementById('seNameInput').value.trim();
+  if(!name){showNotif('이름을 입력해줘!');return;}
+  if(editingStampId){
+    const s=getStamp(editingStampId);
+    if(s){s.name=name;s.color=selColor;s.icon=selIcon;s.stat=selStat;}
+  }else{
+    const newId='s_'+Date.now();
+    G.customStamps.push({id:newId,name,icon:selIcon,color:selColor,stat:selStat});
+  }
+  document.getElementById('stampEditor').style.display='none';
+  editingStampId=null;
+  save();renderSchedule();renderStampBtns();showNotif('✅ 저장됐어!');
+}
+function deleteEditingStamp(){
+  if(!editingStampId)return;
+  if(!confirm(`"${getStamp(editingStampId)?.name}" 도장을 삭제할까?`))return;
+  G.customStamps=G.customStamps.filter(s=>s.id!==editingStampId);
+  // Remove from weekly schedule too
+  [1,2,3,4,5].forEach(d=>{G.weekSchedule[d]=(G.weekSchedule[d]||[]).filter(id=>id!==editingStampId);});
+  document.getElementById('stampEditor').style.display='none';
+  editingStampId=null;
+  save();renderSchedule();renderStampBtns();showNotif('🗑 삭제했어!');
+}
+
+// ─── CHARACTER EXPRESSIONS ────────────────────────
+const CHAR_EXPRS={
+  base:[
+    {text:'오늘도 같이 공부하자! 📚', color:'#FF85C2'},
+    {text:'나 언제 강해지는 거야..? 🥺', color:'#AA88FF'},
+    {text:'간식 먹고 싶다 🍪', color:'#FF9900'},
+    {text:'졸리다... 😪 조금만 쉬자', color:'#88AAFF'},
+    {text:'으라차차! 할 수 있어! 💪', color:'#FF4466'},
+    {text:'...칭찬해줘 😶', color:'#AA88FF'},
+  ],
+  atk:[
+    {text:'오늘도 베어버리겠어! ⚔️', color:'#FF4466'},
+    {text:'공부는 전투다!! 📖⚔️', color:'#CC2244'},
+    {text:'적이여, 덤벼라! 🗡️', color:'#FF6688'},
+    {text:'나의 검은 멈추지 않아! ✨', color:'#FF4466'},
+    {text:'훈련은 배신하지 않는다 💪', color:'#CC2244'},
+    {text:'...칭찬해주면 더 할게 🥺⚔️', color:'#FF88AA'},
+  ],
+  def:[
+    {text:'내가 다 막아낼게! 🛡️', color:'#2277EE'},
+    {text:'포기란 없다! 버텨! 💙', color:'#1155CC'},
+    {text:'흔들리지 않아... 조금은 😅', color:'#4488FF'},
+    {text:'수비가 최고의 공격이야 🛡️✨', color:'#2277EE'},
+    {text:'아무것도 뚫을 수 없어! 🦺', color:'#1155CC'},
+    {text:'...사실 무서워 😶 그래도 할게', color:'#88AAFF'},
+  ],
+  hp:[
+    {text:'나는 지치지 않아! ❤️', color:'#11AA55'},
+    {text:'밥 먹고 공부하자! 🍚💪', color:'#229944'},
+    {text:'체력이 최고야! 아자아자! 💚', color:'#11AA55'},
+    {text:'얼마든지 와라! 지치지 않겠어!', color:'#229944'},
+    {text:'오늘 다 끝내고 놀 거야! 🌈', color:'#55CC77'},
+    {text:'...간식 먹으면 더 잘 할 수 있어 🍪', color:'#77DD99'},
+  ],
+  mag:[
+    {text:'마법은 집중력에서 나와! ✨', color:'#9922DD'},
+    {text:'주문을 외워라... 문제 풀어라! 📜', color:'#7711BB'},
+    {text:'마법은 공부한 만큼 강해져! 🌟', color:'#BB44FF'},
+    {text:'마법으로 풀면 안 될까? 🪄', color:'#9922DD'},
+    {text:'별빛을 모아 지혜가 된다 ⭐', color:'#7711BB'},
+    {text:'...마법이라도 쓰고 싶다 💜', color:'#CC88FF'},
+  ],
+};
+let lastExprIdx=-1, bubbleTimer=null;
+
+function onCharTouch(){
+  const d=dom();
+  const exprs=CHAR_EXPRS[d]||CHAR_EXPRS.base;
+  let idx;
+  do{idx=Math.floor(Math.random()*exprs.length);}while(idx===lastExprIdx&&exprs.length>1);
+  lastExprIdx=idx;
+  const expr=exprs[idx];
+
+  // 흔들기
+  const canvas=document.getElementById('charCanvas');
+  canvas.classList.remove('shaking');
+  void canvas.offsetWidth;
+  canvas.classList.add('shaking');
+  setTimeout(()=>canvas.classList.remove('shaking'),450);
+
+  // 말풍선
+  const wrap=document.getElementById('charWrap');
+  const old=wrap.querySelector('.char-bubble');
+  if(old)old.remove();
+  if(bubbleTimer)clearTimeout(bubbleTimer);
+
+  const bubble=document.createElement('div');
+  bubble.className='char-bubble';
+  bubble.textContent=expr.text;
+  bubble.style.borderColor=expr.color;
+  bubble.style.color=expr.color;
+
+  // 왼쪽 꼬리 삼각형
+  const tail=document.createElement('div');
+  tail.style.cssText=`position:absolute;top:50%;left:-12px;transform:translateY(-50%);
+    width:0;height:0;border-top:7px solid transparent;border-bottom:7px solid transparent;
+    border-right:12px solid ${expr.color};`;
+  bubble.appendChild(tail);
+  wrap.appendChild(bubble);
+
+  bubbleTimer=setTimeout(()=>{
+    bubble.style.transition='opacity .4s';
+    bubble.style.opacity='0';
+    setTimeout(()=>bubble.remove(),400);
+  },2800);
+}
+
+// ─── DEV MODE AUTH ────────────────────────────────
+const DEV_PW_KEY='sa_dev_pw';
+function getDevPw(){return localStorage.getItem(DEV_PW_KEY)||'1234';}
+
+function openDevAuth(){
+  document.getElementById('devPwInput').value='';
+  document.getElementById('devAuthErr').textContent='';
+  document.getElementById('devAuthModal').style.display='flex';
+  setTimeout(()=>document.getElementById('devPwInput').focus(),100);
+}
+function closeDevAuth(){document.getElementById('devAuthModal').style.display='none';}
+
+function checkDevPw(){
+  const val=document.getElementById('devPwInput').value;
+  if(val===getDevPw()){
+    closeDevAuth();
+    if(window._devAuthCallback){window._devAuthCallback();window._devAuthCallback=null;}
+    else{document.getElementById('devMenuPanel').style.display='block';}
+  }else{
+    document.getElementById('devAuthErr').textContent='❌ 비밀번호가 틀렸어요!';
+    document.getElementById('devPwInput').value='';
+  }
+}
+function closeDevMenu(){document.getElementById('devMenuPanel').style.display='none';}
+
+function openDevPwChange(){
+  document.getElementById('devPwNew1').value='';
+  document.getElementById('devPwNew2').value='';
+  document.getElementById('devPwErr').textContent='';
+  document.getElementById('devPwModal').style.display='flex';
+}
+function closeDevPwModal(){document.getElementById('devPwModal').style.display='none';}
+function saveDevPw(){
+  const p1=document.getElementById('devPwNew1').value;
+  const p2=document.getElementById('devPwNew2').value;
+  if(!p1||p1.length<4){document.getElementById('devPwErr').textContent='❌ 4자 이상 입력해주세요!';return;}
+  if(p1!==p2){document.getElementById('devPwErr').textContent='❌ 비밀번호가 일치하지 않아요!';return;}
+  localStorage.setItem(DEV_PW_KEY,p1);
+  closeDevPwModal();
+  showNotif('🔑 비밀번호가 변경됐어요!');
+}
+
+function forceMigrate(){
+  // seasonStartDate 강제 설정 → 항상 이번달 1일로
+  const d=new Date();
+  G.seasonStartDate=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`;
+
+  // nextMonsterDate 강제 설정
+  if(!G.nextMonsterDate){
+    const remainDays=Math.min(3,Math.max(1,(G.nextMonsterDay||2)-(G.dayCount||1)));
+    G.nextMonsterDate=addDays(new Date(),remainDays);
+  }
+  if(!G.season)G.season=1;
+  if(G.monsterNerfed===undefined)G.monsterNerfed=false;
+  if(!G.customShopItems)G.customShopItems=JSON.parse(JSON.stringify(DEFAULT_SHOP_ITEMS));
+
+  save();
+  renderAll();
+  showNotif(`✅ 마이그레이션 완료!\nDay ${calcDayCount()} / ${G.seasonStartDate}`);
+  closeDevMenu();
+}
+
+function openSetSeasonStart(){
+  document.getElementById('curSeasonStart').textContent=G.seasonStartDate||'미설정';
+  document.getElementById('seasonStartInput').value=G.seasonStartDate||dk(G.currentDate);
+  document.getElementById('seasonStartModal').style.display='flex';
+  closeDevMenu();
+}
+function applySeasonStart(){
+  const val=document.getElementById('seasonStartInput').value;
+  if(!val){showNotif('날짜를 입력해주세요!');return;}
+  G.seasonStartDate=val;
+  // 시작일 다음날부터 첫 몬스터 등장으로 설정 → 소급 처리 트리거
+  G.nextMonsterDate=addDays(new Date(val),1+Math.floor(Math.random()*3));
+  document.getElementById('seasonStartModal').style.display='none';
+  save();
+  renderAll();
+  showNotif(`📅 시작일: ${val}\n소급 전투 처리 중...`);
+  setTimeout(()=>{
+    const catchUp=processCatchUpBattles();
+    if(catchUp.count>0){renderAll();showCatchUpResult(catchUp);}
+    else{showNotif(`Day ${calcDayCount()}일로 설정됐어요!`);}
+  },500);
+}
+
+function forceMonsterSpawn(){
+  if(G.battlePending){showNotif('이미 몬스터가 출현 중!');return;}
+  G.nextMonsterDate=dk(G.currentDate); // 오늘로 강제 설정
+  checkMonsterSpawn();
+  closeDevMenu();
+}
+
+// ─── NOTIFICATION ─────────────────────────────────
+let nT=null;
+function showNotif(msg){const e=document.getElementById('notif');e.innerHTML=msg.replace('\n','<br>');e.classList.add('show');if(nT)clearTimeout(nT);nT=setTimeout(()=>e.classList.remove('show'),2500);}
+
+// ─── APP ICON ─────────────────────────────────────
+function generateAppIcon(){
+  try{
+    const ic=document.createElement('canvas');ic.width=512;ic.height=512;
+    const ctx=ic.getContext('2d');
+    const bg=ctx.createLinearGradient(0,0,512,512);
+    bg.addColorStop(0,'#FFE0F5');bg.addColorStop(1,'#FFD0E8');
+    ctx.fillStyle=bg;
+    ctx.beginPath();
+    const r=110,x=0,y=0,w=512,h=512;
+    ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.arcTo(x+w,y,x+w,y+r,r);
+    ctx.lineTo(x+w,y+h-r);ctx.arcTo(x+w,y+h,x+w-r,y+h,r);
+    ctx.lineTo(x+r,y+h);ctx.arcTo(x,y+h,x,y+h-r,r);
+    ctx.lineTo(x,y+r);ctx.arcTo(x,y,x+r,y,r);ctx.closePath();
+    ctx.fill();
+    const tmp=document.createElement('canvas');tmp.width=160;tmp.height=210;
+    const d2=dom(),lv2=d2==='base'?0:slv();
+    const entry2=CHAR_CLASSES.find(cl=>cl.stat===d2&&cl.lv===lv2)||CHAR_CLASSES.find(cl=>cl.stat==='base');
+    const cachedImg2=entry2?_imgCache[entry2.img]:null;
+    if(cachedImg2){
+      const tCtx=tmp.getContext('2d');
+      const sc2=Math.min(160/cachedImg2.naturalWidth,210/cachedImg2.naturalHeight);
+      const iw=cachedImg2.naturalWidth*sc2,ih=cachedImg2.naturalHeight*sc2;
+      tCtx.drawImage(cachedImg2,(160-iw)/2,(210-ih)/2,iw,ih);
+    } else {
+      drawChar(tmp,0);
+    }
+    ctx.imageSmoothingEnabled=false;
+    const sc=2.8,cw=160*sc,ch=210*sc;
+    ctx.drawImage(tmp,(512-cw)/2,(512-ch)/2+20,cw,ch);
+    const dataUrl=ic.toDataURL('image/png');
+    document.getElementById('appleTouchIcon').href=dataUrl;
+    const ml=document.createElement('link');ml.rel='manifest';
+    const mBlob=new Blob([JSON.stringify({name:'여름이 키우기',short_name:'여름이키우기',start_url:'.',display:'standalone',background_color:'#FFE0F5',theme_color:'#FF9ED8',icons:[{src:dataUrl,sizes:'512x512',type:'image/png'}]})],{type:'application/json'});
+    ml.href=URL.createObjectURL(mBlob);document.head.appendChild(ml);
+  }catch(e){console.warn('icon err',e);}
+}
+
+// ─── FIREBASE CLOUD SYNC ──────────────────────────
+const FB_FAMILY_LS='sa_family_code';
+let fbFamilyCode='',fbSaveTimer=null,fbSyncing=false,fbListener=null;
+
+function cloudSetDot(state){const dot=document.getElementById('cloudDot');if(dot)dot.className=state;}
+function openCloudModal(){
+  fbFamilyCode=localStorage.getItem(FB_FAMILY_LS)||'';
+  document.getElementById('cmFamilyCode').value=fbFamilyCode;
+  document.getElementById('cmStatus').textContent=fbFamilyCode?`현재 연결: "${fbFamilyCode}"`:'';
+  document.getElementById('cloudModal').style.display='flex';
+}
+function closeCloudModal(){document.getElementById('cloudModal').style.display='none';}
+function fbDisconnect(){
+  if(fbListener){fbListener();fbListener=null;}
+  localStorage.removeItem(FB_FAMILY_LS);fbFamilyCode='';
+  cloudSetDot('');
+  document.getElementById('cmStatus').textContent='연결이 해제됐어요.';
+  setTimeout(closeCloudModal,1200);
+}
+async function fbConnect(){
+  const code=document.getElementById('cmFamilyCode').value.trim().toLowerCase();
+  const st=document.getElementById('cmStatus');
+  if(!code||code.length<4){st.textContent='❌ 코드는 4자 이상으로!';return;}
+  st.textContent='🔄 연결 중...';cloudSetDot('syncing');
+  try{
+    const snap=await window._fbGet('families/'+code+'/gameData');
+    if(snap.exists()){
+      const d=snap.val();
+      if((d.dayCount||0)>(G.dayCount||0)){
+        const useCloud=confirm('"'+code+'" 코드에 저장된 데이터가 있어요! (Day '+d.dayCount+')\n클라우드 데이터를 불러올까요?\n취소하면 현재 데이터를 올려요.');
+        if(useCloud)applyCloudData(d);else await fbPushNow(code);
+      }else{await fbPushNow(code);}
+    }else{await fbPushNow(code);}
+    fbFamilyCode=code;localStorage.setItem(FB_FAMILY_LS,code);
+    fbAttachListener(code);cloudSetDot('synced');
+    st.textContent='✅ "'+code+'" 연결 완료!';
+    setTimeout(closeCloudModal,1800);
+  }catch(e){cloudSetDot('error');st.textContent='❌ '+e.message;}
+}
+function applyCloudData(data){
+  const rec=JSON.parse(JSON.stringify(data));
+  rec.currentDate=new Date();
+  if(!rec.customStamps)rec.customStamps=JSON.parse(JSON.stringify(DEFAULT_STAMPS));
+  if(!rec.weekSchedule)rec.weekSchedule={1:[],2:[],3:[],4:[],5:[]};
+  if(!rec.customShopItems)rec.customShopItems=JSON.parse(JSON.stringify(DEFAULT_SHOP_ITEMS));
+  if(rec.syncMode===undefined)rec.syncMode=false;
+  if(rec.defeatCount===undefined)rec.defeatCount=0;
+  if(rec.monsterNerfed===undefined)rec.monsterNerfed=false;
+  if(!rec.season)rec.season=1;
+  // seasonStartDate 마이그레이션
+  if(!rec.seasonStartDate){
+    const today=new Date();
+    const daysPassed=Math.max(0,(rec.dayCount||1)-1);
+    const start=new Date(today);start.setDate(start.getDate()-daysPassed);
+    rec.seasonStartDate=dk(start);
+  }
+  // nextMonsterDate 마이그레이션
+  if(!rec.nextMonsterDate){
+    const remainDays=Math.min(3,Math.max(1,(rec.nextMonsterDay||2)-(rec.dayCount||1)));
+    rec.nextMonsterDate=addDays(new Date(),remainDays);
+  }
+  G=rec;
+  const s=JSON.parse(JSON.stringify(G));s.currentDate=G.currentDate.toISOString();
+  localStorage.setItem('sa5',JSON.stringify(s));
+  renderAll();
+}
+async function fbPushNow(code){
+  if(!window._fbSet)return;
+  const payload=JSON.parse(JSON.stringify(G));payload.currentDate=G.currentDate.toISOString();
+  await window._fbSet('families/'+(code||fbFamilyCode)+'/gameData',payload);
+}
+async function fbPush(){
+  if(!fbFamilyCode||fbSyncing)return;
+  fbSyncing=true;cloudSetDot('syncing');
+  try{await fbPushNow(fbFamilyCode);cloudSetDot('synced');}
+  catch(e){cloudSetDot('error');console.warn('FB push:',e);}
+  finally{fbSyncing=false;}
+}
+function scheduleCloudSave(){
+  if(!fbFamilyCode)return;
+  if(fbSaveTimer)clearTimeout(fbSaveTimer);
+  fbSaveTimer=setTimeout(fbPush,3000);
+}
+function fbAttachListener(code){
+  if(fbListener){fbListener();fbListener=null;}
+  if(!window._fbOnValue)return;
+  let first=true;
+  fbListener=window._fbOnValue('families/'+code+'/gameData',snap=>{
+    if(first){first=false;return;}
+    if(fbSyncing)return;
+    if(snap.exists()){const d=snap.val();if((d.dayCount||0)>=(G.dayCount||0)){applyCloudData(d);showNotif('☁️ 클라우드에서 받았어요!');cloudSetDot('synced');}}
+  });
+}
+async function fbLoadOnStart(){
+  fbFamilyCode=localStorage.getItem(FB_FAMILY_LS)||'';
+  if(!fbFamilyCode){cloudSetDot('');return;}
+  cloudSetDot('syncing');
+  try{
+    const snap=await window._fbGet('families/'+fbFamilyCode+'/gameData');
+    if(snap.exists()){const d=snap.val();if((d.dayCount||0)>=(G.dayCount||0))applyCloudData(d);}
+    fbAttachListener(fbFamilyCode);cloudSetDot('synced');
+  }catch(e){cloudSetDot('error');console.warn('FB load:',e);}
+}
+
+// ─── TEST KEYBOARD SHORTCUTS ──────────────────────
+document.addEventListener('keydown',e=>{
+  // 입력창 포커스 중엔 무시
+  if(['INPUT','TEXTAREA'].includes(e.target.tagName))return;
+  switch(e.key.toLowerCase()){
+    case 'q': execStamp(G.customStamps[0]?.id); break; // 영어
+    case 'w': execStamp(G.customStamps[1]?.id); break; // 수학
+    case 'e': execStamp(G.customStamps[2]?.id); break; // 국어
+    case 'r': execStamp(G.customStamps[3]?.id); break; // 악보
+    case 't': execStamp(G.customStamps[4]?.id); break; // 도움
+    case 'a': advDay(); break;                          // 다음날
+    case 's': backDay(); break;                         // 이전날
+    case 'd':                                           // 오늘로
+      calY=G.currentDate.getFullYear();
+      calM=G.currentDate.getMonth();
+      calSelectedKey=dk(G.currentDate);
+      if(document.getElementById('s-stamps').classList.contains('active'))renderCal();
+      showNotif('📅 오늘로 이동!');
+      break;
+    case 'z':                                           // 전체 초기화
+      doSeasonReset();
+      break;
+  }
+});
+
+// ─── INIT ─────────────────────────────────────────
+load();calY=G.currentDate.getFullYear();calM=G.currentDate.getMonth();
+// seasonStartDate 없으면 오늘로 초기화
+if(!G.seasonStartDate){const _d=new Date();G.seasonStartDate=`${_d.getFullYear()}-${String(_d.getMonth()+1).padStart(2,'0')}-01`;}
+// nextMonsterDate 없으면 설정
+if(!G.nextMonsterDate) G.nextMonsterDate=newMonsterDate(G.currentDate);
+renderAll();startAnim();
+if(G.battlePending&&G.pendingMonster)setTimeout(startBattle,900);
+// 앱 시작 시 실제 날짜 기반 몬스터 등장 체크
+else setTimeout(()=>{checkMonsterSpawn();renderAll();},500);
+setTimeout(generateAppIcon,1200);
+setTimeout(fbLoadOnStart,800);
+</script>
+</body>
+</html>
