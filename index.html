@@ -972,11 +972,13 @@ async function drawCharSmart(canvas, bob){
 // ─── DATE UTILS ───────────────────────────────────
 // 한국 시간(UTC+9) 기준 현재 시각 반환
 function nowKST(){
-  const now=new Date();
-  return new Date(now.getTime()+9*60*60*1000);
+  return new Date(); // 로컬 시간 그대로 사용 (배포 환경이 한국이면 맞음)
+                     // 만약 UTC 서버라면 아래 줄 사용:
+  // return new Date(new Date().getTime()+9*60*60*1000);
 }
-const dk=d=>{const k=new Date(d.getTime()+9*60*60*1000);return `${k.getUTCFullYear()}-${String(k.getUTCMonth()+1).padStart(2,'0')}-${String(k.getUTCDate()).padStart(2,'0')}`;};
-const fd=d=>{const k=new Date(d.getTime()+9*60*60*1000);return `${k.getUTCFullYear()}.${String(k.getUTCMonth()+1).padStart(2,'0')}.${String(k.getUTCDate()).padStart(2,'0')}`;};
+// dk/fd는 로컬 날짜 기준 (getFullYear/Month/Date 사용)
+const dk=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const fd=d=>`${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
 const fmt=(y,m)=>`${y}년 ${['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'][m]}`;
 
 // ─── STATE ───────────────────────────────────────
