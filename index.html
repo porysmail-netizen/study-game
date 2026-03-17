@@ -1510,8 +1510,7 @@ function processCatchUpBattles(){
     const lv=Math.min(5,Math.floor(totStamps()/18)+1||1);
     const power=calcMonsterPower(daysUntil);
     const pp=totPow();
-    const lk=0.85+Math.random()*.3;
-    const ep=Math.floor(pp*lk);
+    const ep=pp;
     const won=ep>=power;
 
     const bonesGained=won?3:1;
@@ -1626,7 +1625,7 @@ function startBattle(){
   document.getElementById('battle-ov').classList.add('show');
   const logEl=document.getElementById('bLog'),confBtn=document.getElementById('bConfBtn');
   logEl.innerHTML='';confBtn.style.display='none';bDone=false;bWon=false;mDieT=0;pFleeT=0;
-  const mon=G.pendingMonster,pp=totPow(),lk=0.85+Math.random()*.3,ep=Math.floor(pp*lk);
+  const mon=G.pendingMonster,pp=totPow(),ep=pp;
   bWon=ep>=mon.power;
 
   // Render monster profile card
@@ -1648,7 +1647,7 @@ function startBattle(){
   const logs=[
     {d:300, m:`${mon.emoji} ${mon.name}(Lv.${mon.level})이 나타났다!`,c:'info'},
     {d:900, m:`⚔️${G.stats.atk} 🛡️${G.stats.def} ❤️${G.stats.hp} ✨${G.stats.mag}`,c:'info'},
-    {d:1500,m:`💪 내 전투력: ${pp}  (유효: ${ep})`,c:'info'},
+    {d:1500,m:`💪 내 전투력: ${pp}`,c:'info'},
     {d:2100,m:`👹 몬스터 전투력: ${mon.power}`,c:'info'},
     {d:2800,m:bWon?`✨ 승리! ${mon.name}을 물리쳤다!`:`😱 너무 강해... 도망친다!`,c:bWon?'win':'lose'},
     {d:3400,m:bWon?'🦴 뼛조각 3개 획득!':'🦴 뼛조각 1개... 다음엔 이기자!',c:bWon?'win':'lose'},
@@ -2794,6 +2793,19 @@ async function fbPushNow(code){
   const payload=JSON.parse(JSON.stringify(G));payload.currentDate=G.currentDate.toISOString();
   await window._fbSet('families/'+(code||fbFamilyCode)+'/gameData',payload);
 }
+// 일단위 자동 스냅샷 (하루 1회)
+async function fbDailySnapshot(){
+  if(!fbFamilyCode||!window._fbSet)return;
+  const todayStr=dk(G.currentDate);
+  try{
+    const snap=await window._fbGet('families/'+fbFamilyCode+'/snapshots/'+todayStr);
+    if(snap.exists())return; // 오늘 이미 저장됨
+    const payload=JSON.parse(JSON.stringify(G));payload.currentDate=G.currentDate.toISOString();
+    payload._snapshotDate=todayStr;payload._snapshotTime=new Date().toISOString();
+    await window._fbSet('families/'+fbFamilyCode+'/snapshots/'+todayStr,payload);
+    console.log('Daily snapshot saved:',todayStr);
+  }catch(e){console.warn('Snapshot error:',e);}
+}
 async function fbPush(){
   if(!fbFamilyCode||fbSyncing)return;
   fbSyncing=true;cloudSetDot('syncing');
@@ -2839,6 +2851,7 @@ async function fbLoadOnStart(){
       if(!G.battlePending) setTimeout(()=>{checkMonsterSpawn();renderAll();},100); // 클라우드 데이터 없음
     }
     fbAttachListener(fbFamilyCode);cloudSetDot('synced');
+    setTimeout(fbDailySnapshot,2000); // 앱 시작 2초 후 일단위 스냅샷
   }catch(e){
     cloudSetDot('error');console.warn('FB load:',e);
     if(!G.battlePending) setTimeout(()=>{checkMonsterSpawn();renderAll();},100); // Firebase 오류 시 로컬로 처리
