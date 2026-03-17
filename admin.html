@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>여름이 키우기 — DB 관리툴</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',sans-serif;background:#1a1a2e;color:#eee;min-height:100vh;}
+.header{background:linear-gradient(135deg,#FF9ED8,#FFB86C);padding:14px 20px;display:flex;align-items:center;gap:12px;}
+.header h1{font-size:18px;color:#3D2060;}
+.header .status{margin-left:auto;font-size:12px;padding:4px 10px;border-radius:12px;background:#FFF3;color:#FFF;}
+.container{padding:16px;max-width:1200px;margin:0 auto;}
+
+/* 연결 패널 */
+.connect-panel{background:#16213e;border:2px solid #0f3460;border-radius:12px;padding:16px;margin-bottom:16px;}
+.connect-panel h2{font-size:14px;color:#FF85C2;margin-bottom:10px;}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+input[type=text]{background:#0f3460;border:1px solid #1a4a8a;color:#eee;border-radius:6px;padding:8px 12px;font-size:13px;flex:1;min-width:160px;outline:none;}
+input[type=text]:focus{border-color:#FF85C2;}
+button{padding:8px 16px;border-radius:6px;border:none;cursor:pointer;font-size:13px;font-weight:bold;transition:all .15s;}
+.btn-primary{background:#FF85C2;color:#3D2060;}
+.btn-primary:hover{background:#FF5599;}
+.btn-success{background:#44CC88;color:#003322;}
+.btn-success:hover{background:#22AA66;}
+.btn-danger{background:#FF5544;color:#FFF;}
+.btn-danger:hover{background:#CC2211;}
+.btn-secondary{background:#444;color:#eee;}
+.btn-secondary:hover{background:#666;}
+.btn-sm{padding:4px 10px;font-size:11px;}
+
+/* 탭 */
+.tabs{display:flex;gap:4px;margin-bottom:12px;flex-wrap:wrap;}
+.tab{padding:8px 16px;border-radius:8px 8px 0 0;cursor:pointer;font-size:13px;background:#0f3460;color:#88AACC;border:1px solid #1a4a8a;border-bottom:none;}
+.tab.active{background:#16213e;color:#FF85C2;border-color:#FF85C2;}
+
+/* 패널 */
+.panel{background:#16213e;border:2px solid #0f3460;border-radius:0 12px 12px 12px;padding:16px;display:none;}
+.panel.active{display:block;}
+
+/* 스탯 에디터 */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-bottom:12px;}
+.stat-card{background:#0f3460;border-radius:8px;padding:12px;}
+.stat-card label{font-size:11px;color:#88AACC;display:block;margin-bottom:4px;}
+.stat-card input{width:100%;background:#1a4a8a;border:1px solid #2a5a9a;color:#eee;border-radius:4px;padding:6px;font-size:16px;text-align:center;}
+
+/* 스탬프 에디터 */
+.stamp-date-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:8px;max-height:400px;overflow-y:auto;}
+.stamp-day{background:#0f3460;border-radius:8px;padding:10px;}
+.stamp-day .date{font-size:11px;color:#88AACC;margin-bottom:6px;display:flex;justify-content:space-between;}
+.stamp-list{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px;}
+.stamp-chip{background:#1a4a8a;border-radius:4px;padding:2px 8px;font-size:11px;display:flex;align-items:center;gap:4px;}
+.stamp-chip button{background:none;border:none;color:#FF5544;cursor:pointer;padding:0;font-size:12px;line-height:1;}
+.add-stamp-row{display:flex;gap:4px;margin-top:4px;}
+.add-stamp-row select{background:#1a4a8a;border:1px solid #2a5a9a;color:#eee;border-radius:4px;padding:4px;font-size:11px;flex:1;}
+
+/* JSON 에디터 */
+.json-area{width:100%;min-height:300px;background:#0a0a1a;color:#7FFF7F;border:1px solid #1a4a8a;border-radius:8px;padding:12px;font-family:monospace;font-size:12px;resize:vertical;line-height:1.6;}
+.json-area:focus{outline:none;border-color:#FF85C2;}
+
+/* 알림 */
+.toast{position:fixed;bottom:20px;right:20px;background:#44CC88;color:#003322;padding:12px 20px;border-radius:8px;font-size:13px;font-weight:bold;z-index:999;display:none;animation:slideIn .3s ease;}
+@keyframes slideIn{from{transform:translateX(100%);}to{transform:translateX(0);}}
+.toast.error{background:#FF5544;color:#FFF;}
+
+/* 로딩 */
+.loading{text-align:center;padding:40px;color:#88AACC;font-size:14px;}
+
+/* 구매내역 */
+.hist-list{max-height:300px;overflow-y:auto;}
+.hist-item{background:#0f3460;border-radius:6px;padding:8px 12px;margin-bottom:6px;display:flex;align-items:center;gap:8px;font-size:13px;}
+.hist-item .del{margin-left:auto;background:none;border:none;color:#FF5544;cursor:pointer;font-size:16px;}
+
+/* 배틀 내역 */
+.battle-item{background:#0f3460;border-radius:6px;padding:8px 12px;margin-bottom:6px;font-size:12px;display:flex;align-items:center;gap:8px;}
+.battle-item .won{color:#44CC88;}
+.battle-item .lost{color:#FF5544;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>🛠️</div>
+  <h1>여름이 키우기 — DB 관리툴</h1>
+  <div class="status" id="statusBadge">연결 안됨</div>
+</div>
+
+<div class="container">
+
+  <!-- 연결 패널 -->
+  <div class="connect-panel">
+    <h2>🔗 Firebase 연결</h2>
+    <div class="row">
+      <input type="text" id="familyCode" placeholder="가족 코드 입력 (예: summer2025)" />
+      <button class="btn-primary" onclick="connectDB()">연결</button>
+      <button class="btn-secondary" onclick="disconnectDB()">연결 해제</button>
+    </div>
+  </div>
+
+  <!-- 탭 -->
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('stats')">⚔️ 능력치</div>
+    <div class="tab" onclick="switchTab('stamps')">📅 스탬프</div>
+    <div class="tab" onclick="switchTab('misc')">🎮 기타</div>
+    <div class="tab" onclick="switchTab('purchases')">🧾 구매내역</div>
+    <div class="tab" onclick="switchTab('battles')">⚔️ 전투기록</div>
+    <div class="tab" onclick="switchTab('raw')">📄 RAW JSON</div>
+  </div>
+
+  <!-- 능력치 탭 -->
+  <div class="panel active" id="tab-stats">
+    <div class="stat-grid">
+      <div class="stat-card">
+        <label>⚔️ 공격력 (atk)</label>
+        <input type="number" id="s-atk" min="10" max="999" value="10">
+      </div>
+      <div class="stat-card">
+        <label>🛡️ 방어력 (def)</label>
+        <input type="number" id="s-def" min="10" max="999" value="10">
+      </div>
+      <div class="stat-card">
+        <label>❤️ 체력 (hp)</label>
+        <input type="number" id="s-hp" min="10" max="999" value="10">
+      </div>
+      <div class="stat-card">
+        <label>✨ 마법 (mag)</label>
+        <input type="number" id="s-mag" min="10" max="999" value="10">
+      </div>
+      <div class="stat-card">
+        <label>🦴 뼛조각 (bones)</label>
+        <input type="number" id="s-bones" min="0" max="9999" value="0">
+      </div>
+      <div class="stat-card">
+        <label>📅 시즌 시작일 (seasonStartDate)</label>
+        <input type="date" id="s-seasonStart">
+      </div>
+      <div class="stat-card">
+        <label>👾 다음 몬스터 등장일 (nextMonsterDate)</label>
+        <input type="date" id="s-nextMonster">
+      </div>
+      <div class="stat-card">
+        <label>🌸 시즌 번호 (season)</label>
+        <input type="number" id="s-season" min="1" max="99" value="1">
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn-success" onclick="saveStats()">💾 능력치 저장</button>
+      <button class="btn-secondary" onclick="loadData()">🔄 새로고침</button>
+    </div>
+  </div>
+
+  <!-- 스탬프 탭 -->
+  <div class="panel" id="tab-stamps">
+    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center;">
+      <div style="font-size:13px;color:#88AACC;">날짜별 스탬프 기록</div>
+      <input type="date" id="newStampDate" style="flex:0 0 160px;">
+      <select id="newStampType" style="background:#1a4a8a;border:1px solid #2a5a9a;color:#eee;border-radius:6px;padding:6px;font-size:12px;">
+        <option value="eng">📖 영어</option>
+        <option value="math">✏️ 수학</option>
+        <option value="kor">📝 국어</option>
+        <option value="music">🎵 악보</option>
+        <option value="help">💛 도움</option>
+      </select>
+      <button class="btn-primary btn-sm" onclick="addStampEntry()">+ 추가</button>
+      <button class="btn-success btn-sm" onclick="saveStamps()">💾 저장</button>
+    </div>
+    <div class="stamp-date-grid" id="stampGrid">
+      <div class="loading">연결 후 데이터를 불러오세요</div>
+    </div>
+  </div>
+
+  <!-- 기타 탭 -->
+  <div class="panel" id="tab-misc">
+    <div class="stat-grid">
+      <div class="stat-card">
+        <label>📆 Day 카운트 (dayCount)</label>
+        <input type="number" id="m-dayCount" min="1" max="31" value="1">
+      </div>
+      <div class="stat-card">
+        <label>⚔️ 전투 대기 중 (battlePending)</label>
+        <select id="m-battlePending" style="width:100%;background:#1a4a8a;border:1px solid #2a5a9a;color:#eee;border-radius:4px;padding:6px;font-size:14px;">
+          <option value="false">false</option>
+          <option value="true">true</option>
+        </select>
+      </div>
+      <div class="stat-card">
+        <label>🔄 syncMode</label>
+        <select id="m-syncMode" style="width:100%;background:#1a4a8a;border:1px solid #2a5a9a;color:#eee;border-radius:4px;padding:6px;font-size:14px;">
+          <option value="false">false</option>
+          <option value="true">true</option>
+        </select>
+      </div>
+      <div class="stat-card">
+        <label>🐛 monsterNerfed</label>
+        <select id="m-monsterNerfed" style="width:100%;background:#1a4a8a;border:1px solid #2a5a9a;color:#eee;border-radius:4px;padding:6px;font-size:14px;">
+          <option value="false">false</option>
+          <option value="true">true</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn-success" onclick="saveMisc()">💾 기타 저장</button>
+  </div>
+
+  <!-- 구매내역 탭 -->
+  <div class="panel" id="tab-purchases">
+    <div style="margin-bottom:10px;display:flex;gap:8px;">
+      <button class="btn-danger btn-sm" onclick="clearPurchases()">🗑 전체 삭제</button>
+      <button class="btn-success btn-sm" onclick="savePurchases()">💾 저장</button>
+    </div>
+    <div class="hist-list" id="purchaseList">
+      <div class="loading">연결 후 데이터를 불러오세요</div>
+    </div>
+  </div>
+
+  <!-- 전투기록 탭 -->
+  <div class="panel" id="tab-battles">
+    <div style="margin-bottom:10px;display:flex;gap:8px;">
+      <button class="btn-danger btn-sm" onclick="clearBattles()">🗑 전체 삭제</button>
+      <button class="btn-success btn-sm" onclick="saveBattles()">💾 저장</button>
+    </div>
+    <div class="hist-list" id="battleList">
+      <div class="loading">연결 후 데이터를 불러오세요</div>
+    </div>
+  </div>
+
+  <!-- RAW JSON 탭 -->
+  <div class="panel" id="tab-raw">
+    <div style="margin-bottom:10px;display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn-secondary btn-sm" onclick="formatRaw()">정렬</button>
+      <button class="btn-danger btn-sm" onclick="saveRaw()">⚠️ RAW 저장 (주의)</button>
+      <span style="font-size:11px;color:#FF8888;align-self:center;">※ 잘못된 JSON 입력 시 데이터 손상 위험</span>
+    </div>
+    <textarea class="json-area" id="rawJson"></textarea>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import {getDatabase, ref, set, get} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const app = initializeApp({
+  apiKey:"AIzaSyB5IxztyU4k1p7-PJSUKh2-T6kbUjlbzmM",
+  authDomain:"studysummer.firebaseapp.com",
+  databaseURL:"https://studysummer-default-rtdb.firebaseio.com",
+  projectId:"studysummer",
+  storageBucket:"studysummer.firebasestorage.app",
+  messagingSenderId:"460730500520",
+  appId:"1:460730500520:web:c0227f7fa26e400301099d"
+});
+const db = getDatabase(app);
+
+let currentCode = '';
+let gameData = null;
+
+window.connectDB = async function() {
+  const code = document.getElementById('familyCode').value.trim().toLowerCase();
+  if(!code){ toast('가족 코드를 입력해주세요!', true); return; }
+  currentCode = code;
+  await loadData();
+};
+
+window.disconnectDB = function() {
+  currentCode = '';
+  gameData = null;
+  document.getElementById('statusBadge').textContent = '연결 안됨';
+  document.getElementById('statusBadge').style.background = '#FF554466';
+  toast('연결 해제됨');
+};
+
+window.loadData = async function() {
+  if(!currentCode){ toast('먼저 연결하세요!', true); return; }
+  try {
+    const snap = await get(ref(db, `families/${currentCode}/gameData`));
+    if(!snap.exists()){ toast('데이터 없음 — 가족 코드 확인', true); return; }
+    gameData = snap.val();
+    document.getElementById('statusBadge').textContent = `✅ ${currentCode} 연결됨`;
+    document.getElementById('statusBadge').style.background = '#44CC8866';
+    renderAll();
+    toast('데이터 불러왔어요!');
+  } catch(e) {
+    toast('연결 실패: ' + e.message, true);
+  }
+};
+
+function renderAll() {
+  if(!gameData) return;
+  const d = gameData;
+
+  // 능력치
+  document.getElementById('s-atk').value = d.stats?.atk ?? 10;
+  document.getElementById('s-def').value = d.stats?.def ?? 10;
+  document.getElementById('s-hp').value  = d.stats?.hp  ?? 10;
+  document.getElementById('s-mag').value = d.stats?.mag ?? 10;
+  document.getElementById('s-bones').value = d.bones ?? 0;
+  document.getElementById('s-seasonStart').value = d.seasonStartDate || '';
+  document.getElementById('s-nextMonster').value = d.nextMonsterDate || '';
+  document.getElementById('s-season').value = d.season ?? 1;
+
+  // 기타
+  document.getElementById('m-dayCount').value = d.dayCount ?? 1;
+  document.getElementById('m-battlePending').value = d.battlePending ? 'true' : 'false';
+  document.getElementById('m-syncMode').value = d.syncMode ? 'true' : 'false';
+  document.getElementById('m-monsterNerfed').value = d.monsterNerfed ? 'true' : 'false';
+
+  // 스탬프
+  renderStamps(d.stamps || {});
+
+  // 구매내역
+  renderPurchases(d.purchases || []);
+
+  // 전투기록
+  renderBattles(d.battles || []);
+
+  // RAW
+  document.getElementById('rawJson').value = JSON.stringify(d, null, 2);
+}
+
+function renderStamps(stamps) {
+  const grid = document.getElementById('stampGrid');
+  const entries = Object.entries(stamps).sort((a,b)=>b[0].localeCompare(a[0]));
+  if(entries.length === 0){
+    grid.innerHTML = '<div class="loading">스탬프 기록 없음</div>';
+    return;
+  }
+  grid.innerHTML = entries.map(([date, list]) => {
+    const counts = {};
+    list.forEach(s => counts[s] = (counts[s]||0)+1);
+    const chips = Object.entries(counts).map(([t,n]) =>
+      `<div class="stamp-chip">${stampLabel(t)} ×${n}
+        <button onclick="removeStampDate('${date}','${t}')" title="삭제">✕</button>
+      </div>`
+    ).join('');
+    return `<div class="stamp-day">
+      <div class="date">
+        <span>${date}</span>
+        <button class="btn-sm btn-danger" onclick="deleteStampDay('${date}')">🗑</button>
+      </div>
+      <div class="stamp-list">${chips}</div>
+    </div>`;
+  }).join('');
+}
+
+function stampLabel(t) {
+  return {eng:'📖영어',math:'✏️수학',kor:'📝국어',music:'🎵악보',help:'💛도움'}[t] || t;
+}
+
+window.addStampEntry = function() {
+  if(!gameData) return;
+  const date = document.getElementById('newStampDate').value;
+  const type = document.getElementById('newStampType').value;
+  if(!date){ toast('날짜를 선택해주세요!', true); return; }
+  if(!gameData.stamps) gameData.stamps = {};
+  if(!gameData.stamps[date]) gameData.stamps[date] = [];
+  gameData.stamps[date].push(type);
+  renderStamps(gameData.stamps);
+  toast(`${date} 에 ${stampLabel(type)} 추가됨`);
+};
+
+window.removeStampDate = function(date, type) {
+  if(!gameData?.stamps?.[date]) return;
+  const idx = gameData.stamps[date].lastIndexOf(type);
+  if(idx >= 0) gameData.stamps[date].splice(idx, 1);
+  if(gameData.stamps[date].length === 0) delete gameData.stamps[date];
+  renderStamps(gameData.stamps);
+};
+
+window.deleteStampDay = function(date) {
+  if(!gameData?.stamps) return;
+  delete gameData.stamps[date];
+  renderStamps(gameData.stamps);
+  toast(`${date} 삭제됨`);
+};
+
+function renderPurchases(purchases) {
+  const el = document.getElementById('purchaseList');
+  if(!purchases.length){ el.innerHTML='<div class="loading">구매 내역 없음</div>'; return; }
+  el.innerHTML = [...purchases].reverse().map((p,i) =>
+    `<div class="hist-item">
+      <span>${p.icon||'🎁'}</span>
+      <span>${p.item}</span>
+      <span style="color:#FFD740;">-${p.cost}🦴</span>
+      <span style="color:#888;">${p.date}</span>
+      <button class="del" onclick="deletePurchase(${purchases.length-1-i})">✕</button>
+    </div>`
+  ).join('');
+}
+
+window.deletePurchase = function(idx) {
+  if(!gameData) return;
+  gameData.purchases.splice(idx, 1);
+  renderPurchases(gameData.purchases);
+};
+
+window.clearPurchases = function() {
+  if(!gameData) return;
+  gameData.purchases = [];
+  renderPurchases([]);
+  toast('구매 내역 초기화됨');
+};
+
+function renderBattles(battles) {
+  const el = document.getElementById('battleList');
+  if(!battles.length){ el.innerHTML='<div class="loading">전투 기록 없음</div>'; return; }
+  el.innerHTML = [...battles].reverse().map((b,i) =>
+    `<div class="battle-item">
+      <span class="${b.won?'won':'lost'}">${b.won?'✨승리':'😱패배'}</span>
+      <span>${b.date}</span>
+      <span>${b.monster}</span>
+      <button class="del" onclick="deleteBattle(${battles.length-1-i})" style="margin-left:auto;background:none;border:none;color:#FF5544;cursor:pointer;">✕</button>
+    </div>`
+  ).join('');
+}
+
+window.deleteBattle = function(idx) {
+  if(!gameData) return;
+  gameData.battles.splice(idx, 1);
+  renderBattles(gameData.battles);
+};
+
+window.clearBattles = function() {
+  if(!gameData) return;
+  gameData.battles = [];
+  renderBattles([]);
+  toast('전투 기록 초기화됨');
+};
+
+// 저장 함수들
+window.saveStats = async function() {
+  if(!gameData) { toast('먼저 연결하세요!', true); return; }
+  gameData.stats = {
+    atk: parseInt(document.getElementById('s-atk').value),
+    def: parseInt(document.getElementById('s-def').value),
+    hp:  parseInt(document.getElementById('s-hp').value),
+    mag: parseInt(document.getElementById('s-mag').value),
+  };
+  gameData.bones = parseInt(document.getElementById('s-bones').value);
+  gameData.seasonStartDate = document.getElementById('s-seasonStart').value;
+  gameData.nextMonsterDate = document.getElementById('s-nextMonster').value;
+  gameData.season = parseInt(document.getElementById('s-season').value);
+  await pushData();
+};
+
+window.saveStamps = async function() {
+  if(!gameData){ toast('먼저 연결하세요!', true); return; }
+  await pushData();
+};
+
+window.saveMisc = async function() {
+  if(!gameData){ toast('먼저 연결하세요!', true); return; }
+  gameData.dayCount = parseInt(document.getElementById('m-dayCount').value);
+  gameData.battlePending = document.getElementById('m-battlePending').value === 'true';
+  gameData.syncMode = document.getElementById('m-syncMode').value === 'true';
+  gameData.monsterNerfed = document.getElementById('m-monsterNerfed').value === 'true';
+  await pushData();
+};
+
+window.savePurchases = async function() {
+  if(!gameData){ toast('먼저 연결하세요!', true); return; }
+  await pushData();
+};
+
+window.saveBattles = async function() {
+  if(!gameData){ toast('먼저 연결하세요!', true); return; }
+  await pushData();
+};
+
+window.saveRaw = async function() {
+  try {
+    gameData = JSON.parse(document.getElementById('rawJson').value);
+    await pushData();
+  } catch(e) {
+    toast('JSON 오류: ' + e.message, true);
+  }
+};
+
+window.formatRaw = function() {
+  try {
+    const parsed = JSON.parse(document.getElementById('rawJson').value);
+    document.getElementById('rawJson').value = JSON.stringify(parsed, null, 2);
+  } catch(e) { toast('JSON 오류', true); }
+};
+
+async function pushData() {
+  try {
+    await set(ref(db, `families/${currentCode}/gameData`), gameData);
+    toast('✅ 저장 완료!');
+    document.getElementById('rawJson').value = JSON.stringify(gameData, null, 2);
+  } catch(e) {
+    toast('저장 실패: ' + e.message, true);
+  }
+}
+
+// 탭 전환
+window.switchTab = function(name) {
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    const names = ['stats','stamps','misc','purchases','battles','raw'];
+    t.classList.toggle('active', names[i] === name);
+  });
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+};
+
+// 토스트
+function toast(msg, isError=false) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast' + (isError?' error':'');
+  el.style.display = 'block';
+  setTimeout(() => el.style.display='none', 2500);
+}
+</script>
+</body>
+</html>
