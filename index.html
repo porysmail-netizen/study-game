@@ -1432,7 +1432,9 @@ function checkMonsterSpawn(){
   // 소급 처리 먼저 실행
   const catchUp=processCatchUpBattles();
   if(catchUp.count>0){
-    save(); // 소급 결과 즉시 저장
+    // Firebase 리스너가 덮어쓰기 못하도록 타이머 차단
+    if(fbSaveTimer){clearTimeout(fbSaveTimer);fbSaveTimer=null;}
+    save();
     renderAll();
     showCatchUpResult(catchUp);
     return;
@@ -1447,6 +1449,7 @@ function checkMonsterSpawn(){
     const power=calcMonsterPower(daysUntil);
     G.pendingMonster={...m,mIdx,level:lv,power};
     G.battlePending=true;
+    if(fbSaveTimer){clearTimeout(fbSaveTimer);fbSaveTimer=null;}
     save();
     setTimeout(startBattle,700);
   }
@@ -2733,11 +2736,12 @@ function applyCloudData(data){
     rec.nextMonsterDate=addDays(new Date(),remainDays);
   }
   G=rec;
+  // 이미 전투 중이거나 소급 처리 중이면 battlePending 상태 유지
   const s=JSON.parse(JSON.stringify(G));s.currentDate=G.currentDate.toISOString();
   localStorage.setItem('sa5',JSON.stringify(s));
   renderAll();
-  // Firebase 데이터 적용 후 몬스터 등장/소급 처리 체크
-  if(!G.battlePending) setTimeout(()=>{checkMonsterSpawn();renderAll();},300);
+  // Firebase 데이터 적용 후 몬스터 등장/소급 처리 체크 (battlePending 아닐 때만)
+  if(!G.battlePending) setTimeout(()=>{checkMonsterSpawn();renderAll();},500);
 }
 async function fbPushNow(code){
   if(!window._fbSet)return;
