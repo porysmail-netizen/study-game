@@ -197,6 +197,10 @@ button{padding:8px 16px;border-radius:6px;border:none;cursor:pointer;font-size:1
           <option value="true">true</option>
         </select>
       </div>
+      <div class="stat-card">
+        <label>💀 연속 패배 수 (defeatCount)</label>
+        <input type="number" id="m-defeatCount" min="0" max="99" value="0">
+      </div>
     </div>
     <button class="btn-success" onclick="saveMisc()">💾 기타 저장</button>
   </div>
@@ -304,6 +308,7 @@ function renderAll() {
   document.getElementById('m-battlePending').value = d.battlePending ? 'true' : 'false';
   document.getElementById('m-syncMode').value = d.syncMode ? 'true' : 'false';
   document.getElementById('m-monsterNerfed').value = d.monsterNerfed ? 'true' : 'false';
+  document.getElementById('m-defeatCount').value = d.defeatCount ?? 0;
 
   // 스탬프
   renderStamps(d.stamps || {});
@@ -454,6 +459,7 @@ window.saveMisc = async function() {
   gameData.battlePending = document.getElementById('m-battlePending').value === 'true';
   gameData.syncMode = document.getElementById('m-syncMode').value === 'true';
   gameData.monsterNerfed = document.getElementById('m-monsterNerfed').value === 'true';
+  gameData.defeatCount = parseInt(document.getElementById('m-defeatCount').value) || 0;
   await pushData();
 };
 
