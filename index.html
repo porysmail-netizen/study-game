@@ -970,13 +970,18 @@ async function drawCharSmart(canvas, bob){
 }
 
 // ─── DATE UTILS ───────────────────────────────────
-const dk=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-const fd=d=>`${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+// 한국 시간(UTC+9) 기준 현재 시각 반환
+function nowKST(){
+  const now=new Date();
+  return new Date(now.getTime()+9*60*60*1000);
+}
+const dk=d=>{const k=new Date(d.getTime()+9*60*60*1000);return `${k.getUTCFullYear()}-${String(k.getUTCMonth()+1).padStart(2,'0')}-${String(k.getUTCDate()).padStart(2,'0')}`;};
+const fd=d=>{const k=new Date(d.getTime()+9*60*60*1000);return `${k.getUTCFullYear()}.${String(k.getUTCMonth()+1).padStart(2,'0')}.${String(k.getUTCDate()).padStart(2,'0')}`;};
 const fmt=(y,m)=>`${y}년 ${['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'][m]}`;
 
 // ─── STATE ───────────────────────────────────────
 let G={
-  currentDate:new Date(),
+  currentDate:new Date(), // INIT에서 nowKST()로 교체됨
   seasonStartDate:'', // load() 또는 init에서 설정
   dayCount:1,
   stats:{atk:10,def:10,hp:10,mag:10},bones:0,
@@ -1035,7 +1040,7 @@ function load(){
     }
     G=s;
   }catch(e){}
-  G.currentDate=new Date();
+  G.currentDate=nowKST();
   calY=G.currentDate.getFullYear();
   calM=G.currentDate.getMonth();
 }
@@ -2703,7 +2708,7 @@ async function fbConnect(){
 }
 function applyCloudData(data){
   const rec=JSON.parse(JSON.stringify(data));
-  rec.currentDate=new Date();
+  rec.currentDate=nowKST();
   if(!rec.customStamps)rec.customStamps=JSON.parse(JSON.stringify(DEFAULT_STAMPS));
   if(!rec.weekSchedule)rec.weekSchedule={1:[],2:[],3:[],4:[],5:[]};
   if(!rec.customShopItems)rec.customShopItems=JSON.parse(JSON.stringify(DEFAULT_SHOP_ITEMS));
@@ -2794,7 +2799,9 @@ document.addEventListener('keydown',e=>{
 });
 
 // ─── INIT ─────────────────────────────────────────
-load();calY=G.currentDate.getFullYear();calM=G.currentDate.getMonth();
+load();
+G.currentDate=nowKST(); // 항상 한국 시간 기준
+calY=G.currentDate.getFullYear();calM=G.currentDate.getMonth();
 // seasonStartDate 없으면 오늘로 초기화
 if(!G.seasonStartDate){const _d=new Date();G.seasonStartDate=`${_d.getFullYear()}-${String(_d.getMonth()+1).padStart(2,'0')}-01`;}
 // nextMonsterDate 없으면 설정
