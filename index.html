@@ -2763,7 +2763,7 @@ async function fbPush(){
   fbSyncing=true;cloudSetDot('syncing');
   try{await fbPushNow(fbFamilyCode);cloudSetDot('synced');}
   catch(e){cloudSetDot('error');console.warn('FB push:',e);}
-  finally{fbSyncing=false;}
+  finally{fbSyncing=false;fbSaveTimer=null;}
 }
 function scheduleCloudSave(){
   if(!fbFamilyCode)return;
@@ -2795,9 +2795,18 @@ async function fbLoadOnStart(){
   cloudSetDot('syncing');
   try{
     const snap=await window._fbGet('families/'+fbFamilyCode+'/gameData');
-    if(snap.exists()){const d=snap.val();if((d.dayCount||0)>=(G.dayCount||0))applyCloudData(d);}
+    if(snap.exists()){
+      const d=snap.val();
+      if((d.dayCount||0)>=(G.dayCount||0)) applyCloudData(d); // applyCloudData 내부에서 checkMonsterSpawn 호출
+      else if(!G.battlePending) setTimeout(()=>{checkMonsterSpawn();renderAll();},100); // 로컬이 더 최신
+    } else {
+      if(!G.battlePending) setTimeout(()=>{checkMonsterSpawn();renderAll();},100); // 클라우드 데이터 없음
+    }
     fbAttachListener(fbFamilyCode);cloudSetDot('synced');
-  }catch(e){cloudSetDot('error');console.warn('FB load:',e);}
+  }catch(e){
+    cloudSetDot('error');console.warn('FB load:',e);
+    if(!G.battlePending) setTimeout(()=>{checkMonsterSpawn();renderAll();},100); // Firebase 오류 시 로컬로 처리
+  }
 }
 
 // ─── TEST KEYBOARD SHORTCUTS ──────────────────────
@@ -2836,7 +2845,7 @@ if(!G.nextMonsterDate) G.nextMonsterDate=newMonsterDate(G.currentDate);
 renderAll();startAnim();
 if(G.battlePending&&G.pendingMonster)setTimeout(startBattle,900);
 // 앱 시작 시 실제 날짜 기반 몬스터 등장 체크
-else setTimeout(()=>{checkMonsterSpawn();renderAll();},500);
+else if(!localStorage.getItem(FB_FAMILY_LS)) setTimeout(()=>{checkMonsterSpawn();renderAll();},500); // Firebase 코드 없을 때만 즉시 실행, 있으면 fbLoadOnStart 후 실행
 setTimeout(generateAppIcon,1200);
 setTimeout(fbLoadOnStart,800);
 
