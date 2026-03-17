@@ -2745,6 +2745,13 @@ function applyCloudData(data){
     const remainDays=Math.min(3,Math.max(1,(rec.nextMonsterDay||2)-(rec.dayCount||1)));
     rec.nextMonsterDate=addDays(new Date(),remainDays);
   }
+  // 로컬에서 이미 소급 처리가 완료된 경우 (nextMonsterDate가 더 앞서 있으면)
+  // 클라우드 구버전으로 롤백하지 않고 로컬 결과를 보존한다.
+  if(G.nextMonsterDate && rec.nextMonsterDate && G.nextMonsterDate > rec.nextMonsterDate){
+    rec.nextMonsterDate=G.nextMonsterDate;
+    rec.bones=Math.max(rec.bones||0, G.bones||0);
+    if(G.battles && G.battles.length>(rec.battles||[]).length) rec.battles=G.battles;
+  }
   G=rec;
   // 이미 전투 중이거나 소급 처리 중이면 battlePending 상태 유지
   const s=JSON.parse(JSON.stringify(G));s.currentDate=G.currentDate.toISOString();
