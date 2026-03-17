@@ -1425,14 +1425,20 @@ function advDay(){
 }
 
 // 실제 날짜 기반 몬스터 등장 체크 (앱 시작 시 + 날짜 변경 시 호출)
+// 소급 처리 중복 실행 방지 락
+let _catchUpLock=false;
+
 function checkMonsterSpawn(){
   if(G.battlePending)return;
+  if(_catchUpLock)return; // 이미 처리 중
   const todayStr=dk(G.currentDate);
 
   // 소급 처리 먼저 실행
+  _catchUpLock=true;
   const catchUp=processCatchUpBattles();
+  _catchUpLock=false;
+
   if(catchUp.count>0){
-    // Firebase 리스너가 덮어쓰기 못하도록 타이머 차단
     if(fbSaveTimer){clearTimeout(fbSaveTimer);fbSaveTimer=null;}
     save();
     renderAll();
@@ -1440,8 +1446,8 @@ function checkMonsterSpawn(){
     return;
   }
 
-  // 오늘 몬스터 등장 체크
-  if(!G.nextMonsterDate||todayStr>=G.nextMonsterDate){
+  // 오늘 몬스터 등장 체크 (오늘 날짜는 소급 아닌 실제 전투)
+  if(!G.nextMonsterDate||todayStr>G.nextMonsterDate){
     const mIdx=Math.floor(Math.random()*MONSTERS.length);
     const m=MONSTERS[mIdx];
     const daysUntil=Math.max(1, dateDiff(todayStr, G.nextMonsterDate||todayStr)+1);
@@ -1462,8 +1468,8 @@ function processCatchUpBattles(){
   let count=0, bonesEarned=0, wins=0, losses=0;
   const results=[];
 
-  // 오늘 포함 이전 날짜에 몬스터 등장 예정인 경우 루프 (오늘은 전투로 처리)
-  while(G.nextMonsterDate && G.nextMonsterDate <= todayStr && !G.battlePending){
+  // 오늘보다 이전 날짜만 소급 처리 (오늘은 위에서 실제 전투로 처리)
+  while(G.nextMonsterDate && G.nextMonsterDate < todayStr && !G.battlePending){
     const battleDateStr=G.nextMonsterDate;
     const battleDate=new Date(battleDateStr);
 
@@ -2713,7 +2719,11 @@ async function fbConnect(){
     setTimeout(closeCloudModal,1800);
   }catch(e){cloudSetDot('error');st.textContent='❌ '+e.message;}
 }
+let _applyLock=false;
 function applyCloudData(data){
+  if(_applyLock)return; // 중복 호출 방지
+  _applyLock=true;
+  setTimeout(()=>{_applyLock=false;},2000); // 2초 후 해제
   const rec=JSON.parse(JSON.stringify(data));
   rec.currentDate=nowKST();
   if(!rec.customStamps)rec.customStamps=JSON.parse(JSON.stringify(DEFAULT_STAMPS));
