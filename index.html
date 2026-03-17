@@ -1430,6 +1430,7 @@ function checkMonsterSpawn(){
   // 소급 처리 먼저 실행
   const catchUp=processCatchUpBattles();
   if(catchUp.count>0){
+    save(); // 소급 결과 즉시 저장
     renderAll();
     showCatchUpResult(catchUp);
     return;
@@ -1444,6 +1445,7 @@ function checkMonsterSpawn(){
     const power=calcMonsterPower(daysUntil);
     G.pendingMonster={...m,mIdx,level:lv,power};
     G.battlePending=true;
+    save();
     setTimeout(startBattle,700);
   }
 }
@@ -1455,8 +1457,8 @@ function processCatchUpBattles(){
   let count=0, bonesEarned=0, wins=0, losses=0;
   const results=[];
 
-  // 오늘보다 이전 날짜에 몬스터 등장 예정인 경우 루프
-  while(G.nextMonsterDate && G.nextMonsterDate < todayStr && !G.battlePending){
+  // 오늘 포함 이전 날짜에 몬스터 등장 예정인 경우 루프 (오늘은 전투로 처리)
+  while(G.nextMonsterDate && G.nextMonsterDate <= todayStr && !G.battlePending){
     const battleDateStr=G.nextMonsterDate;
     const battleDate=new Date(battleDateStr);
 
