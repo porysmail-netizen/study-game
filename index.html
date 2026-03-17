@@ -2727,6 +2727,8 @@ function applyCloudData(data){
   const s=JSON.parse(JSON.stringify(G));s.currentDate=G.currentDate.toISOString();
   localStorage.setItem('sa5',JSON.stringify(s));
   renderAll();
+  // Firebase 데이터 적용 후 몬스터 등장/소급 처리 체크
+  if(!G.battlePending) setTimeout(()=>{checkMonsterSpawn();renderAll();},300);
 }
 async function fbPushNow(code){
   if(!window._fbSet)return;
