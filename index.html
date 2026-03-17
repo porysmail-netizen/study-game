@@ -1427,6 +1427,7 @@ function advDay(){
 // 실제 날짜 기반 몬스터 등장 체크 (앱 시작 시 + 날짜 변경 시 호출)
 // 소급 처리 중복 실행 방지 락
 let _catchUpLock=false;
+let _catchUpDoneThisSession=false; // 이번 세션에서 소급 처리가 실행됐는지 추적
 
 function checkMonsterSpawn(){
   if(G.battlePending)return;
@@ -1521,6 +1522,7 @@ function processCatchUpBattles(){
   }
 
   if(count>0){
+    _catchUpDoneThisSession=true; // 이번 세션에서 소급 처리 완료 표시
     save();
   }
   return {count, bonesEarned, wins, losses, results};
@@ -2745,13 +2747,14 @@ function applyCloudData(data){
     const remainDays=Math.min(3,Math.max(1,(rec.nextMonsterDay||2)-(rec.dayCount||1)));
     rec.nextMonsterDate=addDays(new Date(),remainDays);
   }
-  // 로컬에서 이미 소급 처리가 완료된 경우 (nextMonsterDate가 더 앞서 있으면)
-  // 클라우드 구버전으로 롤백하지 않고 로컬 결과를 보존한다.
-  if(G.nextMonsterDate && rec.nextMonsterDate && G.nextMonsterDate > rec.nextMonsterDate){
+  // 이번 세션에서 소급 처리를 실행한 경우에만 로컬 결과를 보존한다.
+  // (단순히 로컬 nextMonsterDate가 미래값인 경우는 보존 안 함 → 클라우드 과거 날짜로 소급처리 가능하게)
+  if(_catchUpDoneThisSession && G.nextMonsterDate && rec.nextMonsterDate && G.nextMonsterDate > rec.nextMonsterDate){
     rec.nextMonsterDate=G.nextMonsterDate;
     rec.bones=Math.max(rec.bones||0, G.bones||0);
     if(G.battles && G.battles.length>(rec.battles||[]).length) rec.battles=G.battles;
   }
+  _catchUpDoneThisSession=false; // applyCloudData 이후 플래그 리셋 (이후 소급처리는 새로 추적)
   G=rec;
   // 이미 전투 중이거나 소급 처리 중이면 battlePending 상태 유지
   const s=JSON.parse(JSON.stringify(G));s.currentDate=G.currentDate.toISOString();
